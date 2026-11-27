@@ -8,6 +8,7 @@ import { callCloudChat, createEmploymentLlmHandler, discoverLocalModels, getEnvC
 import { createEmploymentLiveApiHandler } from './_employment-live-api.mjs';
 import { createLocalIdentityHandler, defaultIdentityDbPath } from './_employment-identity-api.mjs';
 import { createExperienceIntelHandler } from './_experience-api.mjs';
+import { createAbroadApiHandler } from './_abroad-api.mjs';
 
 const page = new URL('./index.html', import.meta.url);
 const reviewPath = '/api/employment/evidence-review';
@@ -80,6 +81,9 @@ export function createCourseCompassServer({
   calendarDbPath,
   jdTextDbPath,
   experiencesDbPath,
+  abroadDbPath,
+  abroadManifest,
+  abroadCrawlRunner,
   crawlRunner,
   identityDbPath = ':memory:',
 } = {}) {
@@ -104,6 +108,7 @@ export function createCourseCompassServer({
   const catalog = createEmploymentCatalogHandler({ file: catalogFile, growthModel, growth });
   const liveApi = createEmploymentLiveApiHandler({ catalogFile, jobsDbPath, calendarDbPath, jdTextDbPath, fetcher: liveFetcher });
   const experienceApi = createExperienceIntelHandler({ catalogFile, experiencesDbPath, crawlRunner });
+  const abroadApi = createAbroadApiHandler({ catalogFile, abroadDbPath, llmFetcher, abroadManifest, abroadCrawlRunner });
   const llmHandler = llm || createEmploymentLlmHandler({
     endpoint: llmEndpoint,
     defaultModel: model || growthModel || null,
@@ -121,6 +126,13 @@ export function createCourseCompassServer({
     }
     if (await identity(request, pathname, send)) return;
     const readLocalJson = localJsonReader(request);
+    if (pathname.startsWith('/api/abroad/')) {
+      if (!isLocalBrowserAllowed(request)) {
+        request.resume();
+        return send(403, { error: 'CROSS_ORIGIN_FORBIDDEN' });
+      }
+      if (await abroadApi(request, pathname, send, readLocalJson, response)) return;
+    }
     if (pathname.startsWith('/api/intel/')) {
       if (!isLocalBrowserAllowed(request)) {
         request.resume();

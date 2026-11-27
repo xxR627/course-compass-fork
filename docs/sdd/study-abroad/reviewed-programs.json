@@ -1,0 +1,147 @@
+{
+  "communitySearches": [
+    { "programId": "prog_hkust_information_technology", "channelId": "zhihu" },
+    { "programId": "prog_hkust_information_technology", "channelId": "xiaohongshu" }
+  ],
+  "reviewedOfficialCases": [
+    {
+      "programId": "prog_hkust_information_technology",
+      "sourceUrl": "https://seng.hkust.edu.hk/academics/taught-postgraduate/msc-it/student-sharing",
+      "evidence": "I was admitted to Master of Science program in Information Technology at HKUST in Fall 2020",
+      "intakeTerm": "2020Fall"
+    }
+  ],
+  "universities": [
+    {
+      "id": "univ_helsinki",
+      "nameZh": "赫尔辛基大学",
+      "nameEn": "University of Helsinki",
+      "region": "eu",
+      "countryCode": "FI",
+      "city": "Helsinki",
+      "officialDomain": "helsinki.fi",
+      "openalexId": "https://openalex.org/I133731052",
+      "qsBand": "Top120",
+      "pswVisaPolicy": "芬兰毕业2年求职与创业居留许可",
+      "listStrictness": "degree_accredited_only"
+    },
+    {
+      "id": "univ_hkust",
+      "nameZh": "香港科技大学",
+      "nameEn": "Hong Kong University of Science and Technology",
+      "region": "hk",
+      "countryCode": "HK",
+      "city": "Hong Kong",
+      "officialDomain": "hkust.edu.hk",
+      "openalexId": "https://openalex.org/I200769079",
+      "qsBand": "Top50",
+      "pswVisaPolicy": "IANG 2年无条件留港工作签",
+      "listStrictness": "tier_preferred"
+    }
+  ],
+  "programs": [
+    {
+      "id": "prog_helsinki_sustainable_resources",
+      "schemaVersion": "1.0",
+      "universityId": "univ_helsinki",
+      "titleEn": "Technologies for Sustainable Use of Renewable Resources",
+      "titleZh": "可再生资源可持续利用技术硕士",
+      "degreeType": "msc_taught",
+      "discipline": "ee_mech",
+      "orientation": "balanced",
+      "durationMonths": 24,
+      "tuitionCurrency": "EUR",
+      "tuitionAmount": 15000,
+      "estTotalRmbPerYear": 195000,
+      "tierGpaRules": {
+        "qingbei": 75,
+        "985": 76,
+        "211": 78,
+        "double_first_class": 78,
+        "sino_foreign": 75,
+        "overseas": 75,
+        "non_double_first_class": 80,
+        "blockedTiers": []
+      },
+      "prereqMode": "core_required",
+      "prereqCourseTags": ["math_calculus", "research_methods"],
+      "allowedMajors": ["mat_mech", "other"],
+      "langPolicy": "required_at_submit",
+      "ieltsOverall": 6.5,
+      "ieltsSubMin": 6.0,
+      "toeflOverall": 92,
+      "greGmatPolicy": "not_required",
+      "admissionMode": "fixed_deadline",
+      "rounds": [
+        {
+          "round": "官网申请期",
+          "openDate": "2027-01-05",
+          "deadline": "2027-01-19"
+        }
+      ],
+      "coreModules": [
+        "Sustainable Bioresource Systems",
+        "Process & Material Engineering",
+        "Environmental Life-Cycle Assessment",
+        "Master’s Thesis Seminar"
+      ],
+      "officialUrl": "https://www.helsinki.fi/en/degree-programmes/technologies-sustainable-use-renewable-resources-masters-programme/admissions",
+      "requirementQuote": "You have completed a first- or second-cycle (bachelor’s or master’s) degree",
+      "verifiedAt": "2026-11-27",
+      "livenessStatus": "active"
+    },
+    {
+      "id": "prog_hkust_information_technology",
+      "schemaVersion": "1.0",
+      "universityId": "univ_hkust",
+      "titleEn": "Master of Science in Information Technology",
+      "titleZh": "信息技术理学硕士",
+      "degreeType": "msc_taught",
+      "discipline": "cs_ai",
+      "orientation": "balanced",
+      "durationMonths": 12,
+      "tuitionCurrency": "HKD",
+      "tuitionAmount": 320000,
+      "estTotalRmbPerYear": 405000,
+      "tierGpaRules": {
+        "qingbei": 81,
+        "985": 83,
+        "211": 85,
+        "double_first_class": 85,
+        "sino_foreign": 82,
+        "overseas": 81,
+        "non_double_first_class": 88,
+        "blockedTiers": []
+      },
+      "prereqMode": "core_required",
+      "prereqCourseTags": ["prog_basic", "cs_core"],
+      "allowedMajors": ["cs", "mat_mech"],
+      "langPolicy": "required_at_submit",
+      "ieltsOverall": 6.5,
+      "ieltsSubMin": 5.5,
+      "toeflOverall": 80,
+      "greGmatPolicy": "not_required",
+      "admissionMode": "rounds",
+      "rounds": [
+        {
+          "round": "Round 1",
+          "deadline": "2026-12-01"
+        },
+        {
+          "round": "Round 2",
+          "deadline": "2027-03-01"
+        }
+      ],
+      "coreModules": [
+        "Data Mining & Knowledge Discovery",
+        "Cloud Computing",
+        "Software Engineering",
+        "Machine Learning"
+      ],
+      "officialUrl": "https://prog-crs.hkust.edu.hk/pgprog/2027-28/msc-it",
+      "requirementQuote": "Applicants seeking admission to a master's degree program should have obtained a bachelor’s degree from a recognized institution",
+      "verifiedAt": "2026-11-27",
+      "livenessStatus": "active"
+    }
+  ]
+}

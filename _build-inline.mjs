@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { readEmploymentData, validateEmploymentData, writeEmploymentFile } from './_employment-data.mjs';
+import { assertAbroadSnapshot } from './_abroad-snapshot.mjs';
 
 const page = new URL('./index.html', import.meta.url);
 const html = readFileSync(page, 'utf8');
 const data = readEmploymentData();
 validateEmploymentData(data);
+if (data.studyAbroad) assertAbroadSnapshot(data.studyAbroad);
 if (data.experienceIntel) {
   const expBytes = Buffer.byteLength(JSON.stringify(data.experienceIntel), 'utf8');
   if (expBytes > 280_000) {

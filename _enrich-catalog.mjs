@@ -10,6 +10,9 @@ import { EXPERIENCE_CHANNELS } from './_experience-channels.mjs';
 import { openExperienceDb } from './_experience-db.mjs';
 import { defaultQuerySeeds } from './_experience-query-planner.mjs';
 import { buildBaselineExperienceRecords } from './_experience-seed-baseline.mjs';
+import { openAbroadDb } from './_abroad-db.mjs';
+import { buildAbroadSnapshot } from './_abroad-snapshot.mjs';
+import { buildBaselineAbroadCatalog } from './_abroad-seed-baseline.mjs';
 
 const require = createRequire(import.meta.url);
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -612,7 +615,21 @@ function main() {
     expDb.close();
   }
 
-  // 5. Strict validation before atomic write (throws if invalid)
+  const abroadPath = join(ROOT, '_research', 'abroad.db');
+  const abroadDb = openAbroadDb(abroadPath);
+  try {
+    const baselineAbroad = buildBaselineAbroadCatalog('2026-11-27');
+    if (abroadDb.listPrograms({ limit: 100 }).length < baselineAbroad.programs.length) {
+      abroadDb.upsert(baselineAbroad);
+    }
+    const snapshot = buildAbroadSnapshot(abroadDb);
+    if (snapshot.programs.length) data.studyAbroad = snapshot;
+    console.log(`[4b] Enriched studyAbroad snapshot: ${snapshot.universities.length} universities, ${snapshot.programs.length} programs, ${snapshot.cases.length} cases`);
+  } finally {
+    abroadDb.close();
+  }
+
+  // 5. Strict validation before write (throws if invalid)
   validateEmploymentData(data);
 
   writeFileSync(DATA_FILE, JSON.stringify(data, null, 2) + '\n', 'utf8');

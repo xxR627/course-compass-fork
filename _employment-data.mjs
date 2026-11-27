@@ -102,7 +102,7 @@ export function writeEmploymentFile(file, content) {
   }
 }
 
-export function updateEmploymentData(update, file = employmentDataFile) {
+export function updateEmploymentData(update, file = employmentDataFile, serialize = JSON.stringify) {
   const lockFile = new URL(file.href + '.lock');
   const lock = openSync(lockFile, 'wx');
   try {
@@ -110,7 +110,7 @@ export function updateEmploymentData(update, file = employmentDataFile) {
     const result = update(data);
     if (result == null) return result;
     validateEmploymentData(data);
-    writeEmploymentFile(file,JSON.stringify(data));
+    writeEmploymentFile(file,serialize(data));
     return result;
   } finally {
     closeSync(lock);

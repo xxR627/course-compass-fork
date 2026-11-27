@@ -97,6 +97,17 @@
             }
           }
         },
+        "studyAbroad": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schemaVersion", "universities", "programs", "cases"],
+          "properties": {
+            "schemaVersion": { "const": "1.0" },
+            "universities": { "type": "array", "items": { "$ref": "study-abroad.schema.json#/$defs/University" } },
+            "programs": { "type": "array", "items": { "$ref": "study-abroad.schema.json#/$defs/StudyAbroadProgram" } },
+            "cases": { "type": "array", "items": { "$ref": "study-abroad.schema.json#/$defs/AdmissionCase" } }
+          }
+        },
         "experienceIntel": {
           "type": "object",
           "required": ["schemaVersion", "updatedAt", "items"],

@@ -71,6 +71,15 @@ node _enrich-catalog.mjs --experiences-only
 node _build-inline.mjs
 ```
 
+## 🌏 留学·选校与开源案例库（`abroad-match-1.0` + `case-sim-1.0`）
+
+完整 SDD 规格书见 [`docs/sdd/study-abroad/`](docs/sdd/study-abroad/)（PRD、技术与架构合一设计、演进路线图）：
+- **零重填课表级先修核验 + 八维选校精算（`abroad-match-1.0`）**：自动继承个人档案学校（自动识别 985/211/双一流/双非/中外合作/海本梯度）、专业、均分、已录课程与已核实成果，按「院校 List 准入 · 均分竞争力 · 课表先修覆盖率 · 语言总分/小分与 Con-Offer 机制 · GRE/GMAT · 软背景 · 年总预算 · 申请轮次」八维定档 `冲刺 / 稳妥 / 保底参考 / 资格受限`，内置 **SVG 三栏准入溯源图**。
+- **Offer + Reject 双样本开源对标库（`case-sim-1.0`）**：覆盖全球 7 大热门地区 32 所名校（含欧陆免学费/低学费公立与日本 SGU 英语项目）、70 个代表性硕士/MPhil 项目与 156+ 条录取/拒信双样本案例，破除只报喜不报忧的幸存者偏差，零手机号留资弹窗。
+- **五维 DIY 闭环与火爬自更新**：涵盖「项目库 · Offer/Rej 案例库 · 跨国横向对比台 · 冲稳保六阶段看板（自动写回《冲突海图》语言与网申死线） · 绑定 `evidenceId` 的有据 SOP/CV 文书弹药库」。
+- 本机采集使用已审核的 JSON 清单（如 [`docs/sdd/study-abroad/reviewed-programs.json`](docs/sdd/study-abroad/reviewed-programs.json)），包含 `universities`、`programs` 及可选 `reviewedFeiyueSources`、`reviewedOfficialCases`、`communitySearches`（知乎/小红书周度公开索引摘要 + 反保录黑产网关）。先用 `node _crawl-abroad.mjs --manifest <清单路径> --dry-run` 预检，再移除 `--dry-run` 写入 `_research/abroad.db`，并通过 `node _export-abroad.mjs && node _build-inline.mjs` 刷新静态快照（严格受控 `< 320KB`）。
+- 启动服务前将 `CC_ABROAD_MANIFEST` 设为该清单路径，即可从本机向 `POST /api/abroad/crawl/trigger` 提交 JSON 请求；GitHub Actions 使用仓库变量 `ABROAD_MANIFEST_JSON` 和密钥 `FIRECRAWL_API_KEY` 执行每周更新，全部门禁通过后自动发布快照。
+
 ## 更新与构建快照
 
 `index.html` 是浏览器主入口，`_cc-data.json` 与 `_cc-engine.js`（`MATCH_VERSION = 'match-2.0.0'` / `TAXONOMY_VERSION = '2026.11.3'`）是内嵌构建来源。更新仓内抽样数据或修改引擎/UI 后，按顺序执行：
@@ -92,6 +101,7 @@ node _build-inline.mjs --check
 - `GET /api/employment/calendar`：检索 `5,611` 条校招日历及官网直投入口（按企业去重与批次排序）。
 - `POST /api/employment/llm/*`：零本地显存 `expert-copilot-v2` 或远程 Cloud OpenAI-Compatible API 诊断。
 - `GET /employment/jobs`、`GET /employment/jobs/{jobId}`、`POST /employment/matches/query`：只读公开快照与去标识画像服务端对表契约（见 `employment.schema.json`）。
+- `GET /api/abroad/programs`、`GET /api/abroad/cases`、`POST /api/abroad/evaluate`、`POST /api/abroad/llm/compare`、`POST /api/abroad/llm/sop-outline`、`POST /api/abroad/crawl/trigger`：留学全量 SQLite 检索、八维选校评估、SSE 混申排程参谋、有据文书提纲与本机回环专属增量更新接口（见 `study-abroad.schema.json`）。
 
 ### 全量自动检查（Node.js >= 22.5.0）
 

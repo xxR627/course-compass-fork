@@ -1052,6 +1052,61 @@ try {
     await vaultContext.close();
   }
 
+  const abroadPage = await browser.newPage();
+  try {
+    const fixture = {
+      id:'e2e_program', universityId:'e2e_university', titleZh:'留学联调项目',
+      titleEn:'Test MSc', officialUrl:'https://example.com/program', requirementQuote:'Programming is required.',
+      verifiedAt:'2026-11-27', langPolicy:'required_at_submit', prereqCourseTags:['prog_basic'],
+      rounds:[{round:'Round 1',deadline:'2099-01-20'}],
+    };
+    const sourceCases = ['offer','reject'].map(outcome => ({
+      id:'e2e_' + outcome, programId:fixture.id, outcome, intakeTerm:'2026Fall',
+      undergradTier:'211', majorFamily:'cs', gpaPercent:86, sourceUrl:'https://example.com/' + outcome,
+    }));
+    await abroadPage.route('**/*', route => {
+      const address = new URL(route.request().url());
+      if (address.origin !== origin) return route.abort();
+      if (address.pathname === '/api/abroad/programs') return route.fulfill({
+        json:{source:'warehouse',total:1,items:[fixture]},
+      });
+      if (address.pathname === '/api/abroad/cases') return route.fulfill({
+        json:{source:'warehouse',total:sourceCases.length,items:sourceCases},
+      });
+      return route.continue();
+    });
+    await abroadPage.goto(origin);
+    await abroadPage.evaluate(() => {
+      state.profile.courses.push({ name:'程序设计基础', status:'已修' });
+      state.paths = ['liuxue'];
+      state.diagIndex = 0;
+    });
+    const nav = module => abroadPage.locator('.nav-item[data-module="' + module + '"]').click();
+    await nav('abroad');
+    await abroadPage.locator('[data-action="abroad-detail"][data-id="e2e_program"]').click();
+    await abroadPage.locator('[data-abroad-offers] li').waitFor();
+    await abroadPage.locator('[data-abroad-cautions] li').waitFor();
+    assert.ok(await abroadPage.locator('#abroad-trace-svg').isVisible(), 'Expected 3-column SVG provenance trace graph in abroad detail');
+    assert.ok(await abroadPage.locator('#abroad-detail').getByText('已修 程序设计基础', { exact:false }).isVisible());
+    await abroadPage.locator('[data-action="abroad-save"][data-id="e2e_program"]').click();
+    await abroadPage.locator('[data-abroad-stage="e2e_program"]').selectOption('submitted');
+    await abroadPage.locator('[data-action="abroad-open-outline"][data-id="e2e_program"]').click();
+    assert.ok(await abroadPage.locator('#abroad-outline-preview').getByText('程序设计基础', { exact:false }).isVisible());
+    await abroadPage.locator('[data-action="abroad-tab"][data-tab="shortlist"]').click();
+    assert.equal(await abroadPage.locator('[data-abroad-stage="e2e_program"]').inputValue(), 'submitted');
+    await nav('conflict');
+    const deadlines = abroadPage.locator('[data-abroad-deadline]');
+    assert.equal(await deadlines.count(), 2);
+    assert.match(await deadlines.first().textContent(), /2099-01-20/);
+    await nav('paths');
+    assert.ok(await abroadPage.getByText('留学·选校同源评估', { exact:true }).isVisible());
+    await abroadPage.reload();
+    await nav('abroad');
+    assert.equal(await abroadPage.locator('[data-abroad-stage="e2e_program"]').inputValue(), 'submitted');
+  } finally {
+    await abroadPage.close();
+  }
+
   assert.deepEqual(errors, []);
   console.log('Employment browser checks passed');
 } finally {

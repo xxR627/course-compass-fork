@@ -12,6 +12,50 @@ function ndcg(grades, ideal, limit) {
   return maximum ? dcg(grades.slice(0, limit)) / maximum : null;
 }
 
+function assertAbroadRanking(engine) {
+  const profile = { schoolTier:'211', major:'cs', gpa:87, courses:[
+    {name:'程序设计基础', status:'已修'}, {name:'线性代数', status:'已修'},
+  ] };
+  const prefs = { budgetRmb:250000, language:{ieltsOverall:7,ieltsSubMin:6.5} };
+  const base = {
+    livenessStatus:'active', tierGpaRules:{'211':83,blockedTiers:[]}, allowedMajors:['cs'],
+    prereqMode:'core_required', prereqCourseTags:['prog_basic'], langPolicy:'required_at_submit',
+    ieltsOverall:6.5, ieltsSubMin:6, greGmatPolicy:'not_required', estTotalRmbPerYear:200000, rounds:[],
+  };
+  const programs = [
+    {...base,id:'list_blocked',tierGpaRules:{'211':83,blockedTiers:['211']}},
+    {...base,id:'unknown',tierGpaRules:{blockedTiers:[]}},
+    {...base,id:'expensive',estTotalRmbPerYear:400000},
+    {...base,id:'aligned'},
+    {...base,id:'missing_courses',prereqCourseTags:['cs_core','research_methods']},
+  ];
+  const cases = [
+    {id:'offer_far',outcome:'offer',undergradTier:'985',gpaPercent:96,majorFamily:'econ'},
+    {id:'offer_near',outcome:'offer',undergradTier:'211',gpaPercent:86,majorFamily:'cs'},
+    {id:'offer_partial',outcome:'conditional_offer',undergradTier:'211',gpaPercent:82,majorFamily:'cs'},
+    {id:'reject_far',outcome:'reject',undergradTier:'overseas',gpaPercent:93,majorFamily:'other'},
+    {id:'reject_near',outcome:'reject',undergradTier:'211',gpaPercent:88,majorFamily:'cs'},
+  ].map(item => ({...item,programId:'aligned'}));
+  const fixedDate = new Date('2026-11-27T00:00:00Z');
+  const ranked = engine.matchAbroadPrograms(profile,prefs,programs,fixedDate,cases);
+  assert.equal(ranked.at(-1).program.id,'list_blocked');
+  assert.equal(ranked.at(-1).eligibility.status,'FAIL');
+  const programLabels = {aligned:3,expensive:2,missing_courses:1,unknown:0,list_blocked:0};
+  const programGrades = ranked.map(item=>programLabels[item.program.id]);
+  const topCases = engine.similarAbroadCases(profile,cases,{programId:'aligned'});
+  const offerLabels = {offer_near:3,offer_partial:2,offer_far:0};
+  const cautionLabels = {reject_near:3,reject_far:0};
+  const offerGrades = topCases.offers.map(item=>offerLabels[item.id]);
+  const cautionGrades = topCases.cautions.map(item=>cautionLabels[item.id]);
+  for (const [label, grades, ideal] of [
+    ['programs',programGrades,[3,2,1,0,0]], ['offers',offerGrades,[3,2,0]], ['cautions',cautionGrades,[3,0]],
+  ]) {
+    assert.equal(grades.length,ideal.length,'Missing abroad ranking candidates in ' + label);
+    const score = ndcg(grades,ideal,5);
+    assert.ok(score >= 0.95,'Study abroad ' + label + ' NDCG@5: ' + score);
+  }
+}
+
 function mean(values) {
   const known = values.filter(value => value != null);
   return known.length ? known.reduce((sum, value) => sum + value, 0) / known.length : null;
@@ -312,6 +356,7 @@ if (process.argv.includes('--self-test')) {
     { ndcg5:0.9, precision5:0.6, studentRelevanceNdcg5:0.7 }));
 
   const engine = employmentEngine(readEmploymentData());
+  assertAbroadRanking(engine);
   const snapshot = engine.snapshotHash(engine.DATA.jobs);
   const [a,b] = engine.DATA.jobs;
   const pilot=summarizePilot([

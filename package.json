@@ -6,8 +6,10 @@
   "scripts": {
     "firecrawl:serve": "node _firecrawl-local-serve.mjs",
     "crawl:experiences": "node _crawl-experiences.mjs",
+    "crawl:abroad": "node _crawl-abroad.mjs --manifest docs/sdd/study-abroad/reviewed-programs.json",
     "check:employment": "node _smoke.mjs && node _employment-contract-test.mjs && node _employment-eval.mjs --self-test && node _build-inline.mjs --check && node _employment-e2e.mjs",
-    "check:experience": "node _experience-contract-test.mjs"
+    "check:experience": "node _experience-contract-test.mjs",
+    "check:abroad": "node _abroad-contract-test.mjs"
   },
   "devDependencies": {
     "ajv": "8.20.0",

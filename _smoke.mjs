@@ -569,4 +569,65 @@ console.log('SMOKE_INTEL_RANK_V2');
     await new Promise(resolve => srv.close(resolve));
   }
 }
+console.log('SMOKE_STUDY_ABROAD_V1');
+{
+  assert.equal(CC.ABROAD_MATCH_VERSION, 'abroad-match-1.0');
+  assert.equal(CC.CASE_SIM_VERSION, 'case-sim-1.0');
+  const abroad = data.studyAbroad;
+  assert.ok(abroad && abroad.universities.length >= 25, `Expected >=25 universities, got ${abroad?.universities?.length}`);
+  assert.ok(abroad.programs.length >= 60, `Expected >=60 programs, got ${abroad?.programs?.length}`);
+  assert.ok(abroad.cases.length >= 120, `Expected >=120 dual-sample cases, got ${abroad?.cases?.length}`);
+  assert.ok(abroad.cases.some(c => c.outcome === 'offer') && abroad.cases.some(c => c.outcome === 'reject'), 'Must include both Offer and Reject benchmark cases');
+
+  // Four standard student personas (985 STEM, 211 Econ/Fin, Non-211 Humanities, Non-211 Career-Switch to CS)
+  const p985Stem = {
+    school: '华南理工大学（985）', major: '计算机科学与技术', gpa: 87,
+    courses: [{ name: '高等数学', status: '已修' }, { name: '线性代数', status: '已修' }, { name: '概率论与数理统计', status: '已修' }, { name: '程序设计基础', status: '已修' }, { name: '数据结构', status: '已修' }, { name: '操作系统', status: '已修' }],
+  };
+  const p211Econ = {
+    school: '上海财经大学', major: '金融学', gpa: 86,
+    courses: [{ name: '微积分', status: '已修' }, { name: '概率论与数理统计', status: '已修' }, { name: '微观经济学', status: '已修' }, { name: '公司金融', status: '已修' }],
+  };
+  const pNon211Hum = {
+    school: '临江大学（双非）', major: '汉语言文学', gpa: 86,
+    courses: [{ name: '现代汉语', status: '已修' }, { name: '社会调查与研究方法', status: '已修' }],
+  };
+  const pNon211Switch = {
+    school: '临江理工大学（双非）', major: '自动化', gpa: 87,
+    courses: [{ name: '高等数学', status: '已修' }, { name: '线性代数', status: '已修' }, { name: '概率论与数理统计', status: '已修' }, { name: 'Python程序设计', status: '已修' }, { name: '数据结构', status: '已修' }],
+  };
+
+  const nowRef = new Date('2026-11-27T00:00:00Z');
+  const mHum = CC.matchAbroadPrograms(pNon211Hum, {}, abroad.programs, nowRef, abroad.cases);
+  const icComp = mHum.find(x => x.program.id === 'prog_ic_msc_computing');
+  const tumInf = mHum.find(x => x.program.id === 'prog_tum_msc_inf');
+  const hkuJmc = mHum.find(x => x.program.id === 'prog_hku_ma_jmc');
+  const cityuImc = mHum.find(x => x.program.id === 'prog_cityu_ma_imc');
+  assert.equal(icComp.eligibility.status, 'FAIL', 'UK strict list must block non_double_first_class');
+  assert.equal(tumInf.eligibility.status, 'FAIL', 'EU strict_ects CS must block humanities student missing math/CS');
+  assert.ok(['PASS', 'CONDITIONAL'].includes(hkuJmc.eligibility.status), 'Cross-major journalism should allow strong humanities student');
+  assert.equal(CC.evaluateAbroadProgram(pNon211Hum, { language: { cet6Accepted: true } }, cityuImc.program, nowRef, abroad.cases).eligibility.status, 'PASS');
+
+  const m985 = CC.matchAbroadPrograms(p985Stem, { language: { ieltsOverall: 7.0, ieltsSubMin: 6.5 }, meetsGreGmat: true }, abroad.programs, nowRef, abroad.cases);
+  assert.equal(m985.find(x => x.program.id === 'prog_tum_msc_inf').eligibility.status, 'CONDITIONAL');
+  assert.equal(m985.find(x => x.program.id === 'prog_manchester_msc_acs').eligibility.status, 'PASS');
+
+  const mEcon = CC.matchAbroadPrograms(p211Econ, { language: { ieltsOverall: 7.0, ieltsSubMin: 6.5 } }, abroad.programs, nowRef, abroad.cases);
+  assert.equal(mEcon.find(x => x.program.id === 'prog_warwick_msc_ba').eligibility.status, 'PASS');
+
+  const mSwitch = CC.matchAbroadPrograms(pNon211Switch, {}, abroad.programs, nowRef, abroad.cases);
+  assert.equal(mSwitch.find(x => x.program.id === 'prog_bristol_msc_cs_conv').eligibility.status, 'CONDITIONAL');
+
+  // Latency budget: 210+ programs must rank in <30ms
+  const benchPool = Array.from({ length: 210 }, (_, idx) => ({
+    ...abroad.programs[idx % abroad.programs.length],
+    id: `prog_bench_${idx}`,
+  }));
+  CC.matchAbroadPrograms(p985Stem, {}, benchPool, nowRef, abroad.cases);
+  const t0 = performance.now();
+  const ranked210 = CC.matchAbroadPrograms(p985Stem, {}, benchPool, nowRef, abroad.cases);
+  const abroadMs = performance.now() - t0;
+  assert.equal(ranked210.length, 210);
+  assert.ok(abroadMs < 30, `Expected <30ms for 210 programs, got ${abroadMs.toFixed(2)}ms`);
+}
 console.log('SMOKE_OK');

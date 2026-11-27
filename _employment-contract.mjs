@@ -7,6 +7,7 @@ const schema = JSON.parse(readFileSync(new URL('./employment.schema.json', impor
 const schemaKey = 'employment.schema.json';
 const ajv = new Ajv2020({ strict: true });
 addFormats(ajv);
+ajv.addSchema(JSON.parse(readFileSync(new URL('./study-abroad.schema.json', import.meta.url), 'utf8')));
 ajv.addSchema(schema, schemaKey);
 
 export function assertEmploymentShape(definition, value, subject = definition) {

@@ -1,0 +1,619 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "study-abroad.schema.json",
+  "$defs": {
+    "University": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nameZh",
+        "nameEn",
+        "region",
+        "countryCode",
+        "city",
+        "officialDomain",
+        "openalexId",
+        "qsBand",
+        "pswVisaPolicy",
+        "listStrictness"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "nameZh": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "nameEn": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "region": {
+          "enum": [
+            "hk",
+            "sg",
+            "uk",
+            "eu",
+            "us_ca",
+            "au_nz",
+            "jp_kr"
+          ]
+        },
+        "countryCode": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "city": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "officialDomain": {
+          "type": "string",
+          "pattern": "^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z]{2,}$"
+        },
+        "openalexId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "qsBand": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pswVisaPolicy": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "listStrictness": {
+          "enum": [
+            "strict_list",
+            "tier_preferred",
+            "degree_accredited_only"
+          ]
+        }
+      }
+    },
+    "StudyAbroadProgram": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "schemaVersion",
+        "universityId",
+        "titleEn",
+        "titleZh",
+        "degreeType",
+        "discipline",
+        "orientation",
+        "durationMonths",
+        "tuitionCurrency",
+        "tuitionAmount",
+        "estTotalRmbPerYear",
+        "tierGpaRules",
+        "prereqMode",
+        "prereqCourseTags",
+        "allowedMajors",
+        "langPolicy",
+        "ieltsOverall",
+        "ieltsSubMin",
+        "toeflOverall",
+        "greGmatPolicy",
+        "admissionMode",
+        "rounds",
+        "coreModules",
+        "officialUrl",
+        "requirementQuote",
+        "verifiedAt",
+        "livenessStatus"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "schemaVersion": {
+          "const": "1.0"
+        },
+        "universityId": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "titleEn": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "titleZh": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "degreeType": {
+          "enum": [
+            "msc_taught",
+            "mphil_research",
+            "phd"
+          ]
+        },
+        "discipline": {
+          "enum": [
+            "cs_ai",
+            "data_ba",
+            "ee_mech",
+            "econ_fin",
+            "media_edu_hum"
+          ]
+        },
+        "orientation": {
+          "enum": [
+            "career",
+            "research",
+            "balanced"
+          ]
+        },
+        "durationMonths": {
+          "type": "integer",
+          "minimum": 9,
+          "maximum": 72
+        },
+        "tuitionCurrency": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "tuitionAmount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estTotalRmbPerYear": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "tierGpaRules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "blockedTiers"
+          ],
+          "properties": {
+            "211": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "985": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "qingbei": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "double_first_class": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "non_double_first_class": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "sino_foreign": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "overseas": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "unknown": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "blockedTiers": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "qingbei",
+                  "985",
+                  "211",
+                  "double_first_class",
+                  "non_double_first_class",
+                  "sino_foreign",
+                  "overseas",
+                  "unknown"
+                ]
+              },
+              "uniqueItems": true,
+              "maxItems": 80
+            }
+          }
+        },
+        "prereqMode": {
+          "enum": [
+            "strict_ects",
+            "core_required",
+            "cross_major_friendly"
+          ]
+        },
+        "prereqCourseTags": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "math_calculus",
+              "math_linear_algebra",
+              "math_prob_stat",
+              "prog_basic",
+              "cs_core",
+              "ee_control_core",
+              "econ_fin_core",
+              "research_methods"
+            ]
+          },
+          "uniqueItems": true,
+          "maxItems": 80
+        },
+        "allowedMajors": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S",
+            "maxLength": 1000
+          },
+          "uniqueItems": true,
+          "maxItems": 80
+        },
+        "langPolicy": {
+          "enum": [
+            "required_at_submit",
+            "conditional_allowed",
+            "cet6_accepted",
+            "unknown"
+          ]
+        },
+        "ieltsOverall": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ieltsSubMin": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "toeflOverall": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "greGmatPolicy": {
+          "enum": [
+            "not_required",
+            "optional_recommended",
+            "required",
+            "unknown"
+          ]
+        },
+        "admissionMode": {
+          "enum": [
+            "rolling",
+            "rounds",
+            "fixed_deadline"
+          ]
+        },
+        "rounds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "round",
+              "deadline"
+            ],
+            "properties": {
+              "round": {
+                "type": "string",
+                "pattern": "\\S",
+                "maxLength": 1000
+              },
+              "openDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "deadline": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          },
+          "uniqueItems": true,
+          "maxItems": 80
+        },
+        "coreModules": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S",
+            "maxLength": 1000
+          },
+          "uniqueItems": true,
+          "maxItems": 80
+        },
+        "officialUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://[^/?#@]+(?:[/?#]|$)"
+        },
+        "requirementQuote": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "verifiedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "string",
+              "format": "date-time"
+            }
+          ]
+        },
+        "livenessStatus": {
+          "enum": [
+            "active",
+            "closed_season",
+            "archived"
+          ]
+        }
+      }
+    },
+    "AdmissionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "schemaVersion",
+        "programId",
+        "intakeTerm",
+        "outcome",
+        "undergradTier",
+        "undergradSchoolTag",
+        "undergradMajor",
+        "majorFamily",
+        "gpaPercent",
+        "gpaRawText",
+        "rankBucket",
+        "langText",
+        "greGmatText",
+        "highlights",
+        "submittedMonth",
+        "decisionMonth",
+        "keyTakeaway",
+        "sourceChannel",
+        "sourceLabel",
+        "sourceUrl",
+        "simhash64",
+        "verifiedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "schemaVersion": {
+          "const": "1.0"
+        },
+        "programId": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "intakeTerm": {
+          "type": "string",
+          "pattern": "^20[0-9]{2}(Fall|Spring|Summer|Winter)$"
+        },
+        "outcome": {
+          "enum": [
+            "offer",
+            "conditional_offer",
+            "waitlist",
+            "reject"
+          ]
+        },
+        "undergradTier": {
+          "enum": [
+            "qingbei",
+            "985",
+            "211",
+            "double_first_class",
+            "non_double_first_class",
+            "sino_foreign",
+            "overseas",
+            "unknown"
+          ]
+        },
+        "undergradSchoolTag": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "undergradMajor": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "majorFamily": {
+          "enum": [
+            "cs",
+            "mat_mech",
+            "econ",
+            "chinese",
+            "other"
+          ]
+        },
+        "gpaPercent": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 50,
+          "maximum": 100
+        },
+        "gpaRawText": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "rankBucket": {
+          "enum": [
+            "top10%",
+            "10%-30%",
+            ">30%",
+            "unknown"
+          ]
+        },
+        "langText": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "greGmatText": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "highlights": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "\\S",
+            "maxLength": 1000
+          },
+          "uniqueItems": true,
+          "maxItems": 80
+        },
+        "submittedMonth": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decisionMonth": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "\\S",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keyTakeaway": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "sourceChannel": {
+          "enum": [
+            "github_feiyue",
+            "gradcafe_open",
+            "zhihu",
+            "xiaohongshu",
+            "edu_public"
+          ]
+        },
+        "sourceLabel": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 1000
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://[^/?#@]+(?:[/?#]|$)"
+        },
+        "simhash64": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{16}$"
+        },
+        "verifiedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "string",
+              "format": "date-time"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

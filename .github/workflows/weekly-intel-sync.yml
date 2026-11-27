@@ -37,11 +37,24 @@ jobs:
         run: |
           node _crawl-experiences.mjs --gh-actions --budget "${{ github.event.inputs.budget || '24' }}" --llm
 
+      - name: Refresh the reviewed study abroad catalog
+        if: ${{ vars.ABROAD_MANIFEST_JSON != '' }}
+        env:
+          ABROAD_MANIFEST_JSON: ${{ vars.ABROAD_MANIFEST_JSON }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+        run: |
+          manifest="$(mktemp)"
+          trap 'rm -f "$manifest"' EXIT
+          printf '%s\n' "$ABROAD_MANIFEST_JSON" > "$manifest"
+          node _crawl-abroad.mjs --manifest "$manifest"
+          node _export-abroad.mjs
+
       - name: Refresh inline experience snapshot and verify all SDD quality gates
         run: |
           node _enrich-catalog.mjs --experiences-only
           node _build-inline.mjs
           pnpm check:experience
+          pnpm check:abroad
           node _smoke.mjs
           node _employment-contract-test.mjs
           node _employment-eval.mjs --self-test

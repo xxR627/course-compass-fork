@@ -2709,12 +2709,17 @@
   function inferSchoolTierFromName(schoolName) {
     const s = String(schoolName || '').trim();
     if (!s || /演示|未命名|待填/.test(s)) return 'unknown';
-    if (/清华|北京大学/.test(s)) return 'qingbei';
-    if (/复旦|上海交通|浙江大学|中国科学技术|南京大学|哈尔滨工业|西安交通|北京航空|同济|华中科技|东南大学|武汉大学|中山大学|厦门大学|北京理工|天津大学|南开|山东大学|四川大学|吉林大学|中南大学|大连理工|重庆大学|电子科技|西北工业|华南理工|中国农业|北京师范|华东师范|中国人民大学/.test(s)) {
+    if (/清北|清华|北京大学/.test(s)) return 'qingbei';
+    if (/中外合[办作]|西交利物浦|西浦|宁波诺丁汉|宁诺|香港中文大学[（(]深圳|港中深|昆山杜克|上海纽约|北师港浸/.test(s)) return 'sino_foreign';
+    if (/海本|海外本科|美本|英本|澳本|加本/.test(s)) return 'overseas';
+    if (/\b985\b|复旦|上海交通|浙江大学|中国科学技术|南京大学|哈尔滨工业|西安交通|北京航空|同济|华中科技|东南大学|武汉大学|中山大学|厦门大学|北京理工|天津大学|南开|山东大学|四川大学|吉林大学|中南大学|大连理工|重庆大学|电子科技|西北工业|华南理工|中国农业|北京师范|华东师范|中国人民大学|中国海洋|中央民族|西北农林/.test(s)) {
       return '985';
     }
-    if (/邮电|交通大学|理工大学|财经大学|师范大学/.test(s) && /北京邮电|西安电子|南京航空|南京理工|武汉理工|上海财经|中央财经|中南财经|对外经济|华中师范|西南交通|北京交通|河海|江南大学|东华|苏州大学|暨南|华北电力|中国矿业|中国石油|中国地质|合肥工业|福州大学|郑州大学|云南大学|新疆大学/.test(s)) {
+    if (/\b211\b|北京邮电|西安电子|南京航空|南京理工|武汉理工|上海财经|中央财经|中南财经|对外经济|西南财经|华中师范|东北师范|陕西师范|西南交通|北京交通|河海|江南大学|东华|苏州大学|暨南|华北电力|中国矿业|中国石油|中国地质|合肥工业|福州大学|郑州大学|云南大学|新疆大学|上海大学|北京工业|北京科技|北京化工|中国传媒|北京外国语|上海外国语/.test(s)) {
       return '211';
+    }
+    if (/双一流|南方科技|上海科技|中国科学院大学|南京邮电|南京信息工程|杭州电子.*双一流|宁波大学|湘潭大学|山西大学|河南大学/.test(s)) {
+      return 'double_first_class';
     }
     return 'non_double_first_class';
   }
@@ -3019,7 +3024,240 @@
       .map(x => x.item);
   }
 
+  const ABROAD_MATCH_VERSION = 'abroad-match-1.0';
+  const CASE_SIM_VERSION = 'case-sim-1.0';
+  const COURSE_PREREQ_TAGS = {
+    math_calculus: /微积分|高等数学|数学分析|calculus|mathematical analysis/i,
+    math_linear_algebra: /线性代数|高等代数|矩阵论|linear algebra/i,
+    math_prob_stat: /概率|统计|计量经济学|probability|statistics|econometrics/i,
+    prog_basic: /程序设计|编程|C语言|C\+\+|\b(?:python|java|programming)\b/i,
+    cs_core: /数据结构|算法设计|操作系统|计算机网络|数据库原理|data structures|operating systems|computer networks|database systems/i,
+    ee_control_core: /模拟电路|数字电路|信号与系统|自动控制|控制工程|单片机|嵌入式|control systems|circuits|embedded systems/i,
+    econ_fin_core: /微观经济学|宏观经济学|金融学|公司金融|财务会计|财务管理|会计学|microeconomics|macroeconomics|finance|accounting/i,
+    research_methods: /社会调查|研究方法|学术写作|实验设计|统计建模|市场调查|文献检索|research methods|experimental design/i,
+  };
+  const knownAbroadNumber = value => typeof value === 'number' && Number.isFinite(value);
+  const clampAbroad = value => Math.min(1, Math.max(0, value));
+  const positiveAdmission = item => ['offer', 'conditional_offer'].includes(item.outcome);
+  function normalizeAbroadMajor(majorStr) {
+    if (!majorStr) return null;
+    if (['cs', 'mat_mech', 'econ', 'chinese', 'other'].includes(majorStr)) return majorStr;
+    return majorOf(majorStr) || 'other';
+  }
+  function resolveAbroadTier(profile = {}, abroadPrefs = {}) {
+    if (abroadPrefs?.schoolTier) return abroadPrefs.schoolTier;
+    if (profile?.schoolTier) return profile.schoolTier;
+    const inferred = inferSchoolTierFromName(profile?.school || profile?.schoolLabel || '');
+    return inferred !== 'unknown' ? inferred : undefined;
+  }
+
+  function auditPrerequisites(courses, program) {
+    const rows = (program.prereqCourseTags || []).map(tag => ({ tag, completed: [], inProgress: [] }));
+    for (const record of courses || []) {
+      const course = typeof record === 'string' ? { id: record, status: 'completed' } : record;
+      const name = course.name || COURSE_BY_ID.get(course.id)?.name || '';
+      const status = ['已通过', '已修', 'completed'].includes(course.status) ? 'completed'
+        : ['在修', 'in_progress'].includes(course.status) ? 'inProgress' : null;
+      if (!status) continue;
+      for (const row of rows) {
+        if (COURSE_PREREQ_TAGS[row.tag]?.test(name) && !row[status].includes(name)) row[status].push(name);
+      }
+    }
+    const missing = rows.filter(row => !row.completed.length && !row.inProgress.length).map(row => row.tag);
+    const pending = rows.filter(row => !row.completed.length && row.inProgress.length).map(row => row.tag);
+    const coverage = rows.length ? (rows.length - missing.length - 0.5 * pending.length) / rows.length : 1;
+    return { rows, missing, pending, coverage };
+  }
+
+  function evaluateAbroadProgram(profile = {}, abroadPrefs = {}, program, now = new Date(), cases = []) {
+    const tier = resolveAbroadTier(profile, abroadPrefs);
+    const gpa = abroadPrefs.gpa ?? profile.gpa;
+    const normalizedMajor = normalizeAbroadMajor(profile.major);
+    const rules = program.tierGpaRules || {};
+    const minimum = tier && tier !== 'unknown' && knownAbroadNumber(rules[tier]) ? rules[tier] : null;
+    const courseRecords = profile.courses || [];
+    const listedIds = new Set(courseRecords.map(course => course.id));
+    const courses = [...courseRecords, ...(profile.completedCourseIds || []).filter(id => !listedIds.has(id))];
+    const audit = auditPrerequisites(courses, program);
+    const isAligned = Boolean(normalizedMajor && (program.allowedMajors || []).includes(normalizedMajor));
+    const lang = abroadPrefs.language || {};
+    const verifiedLanguage = (knownAbroadNumber(program.ieltsOverall) && lang.ieltsOverall >= program.ieltsOverall &&
+      (!knownAbroadNumber(program.ieltsSubMin) || lang.ieltsSubMin >= program.ieltsSubMin)) ||
+      (knownAbroadNumber(program.toeflOverall) && lang.toeflOverall >= program.toeflOverall) ||
+      (program.langPolicy === 'cet6_accepted' && lang.cet6Accepted === true);
+    const gradTest = abroadPrefs.meetsGreGmat === true || program.greGmatPolicy !== 'required';
+    const blocked = [];
+    const conditions = [];
+    const unknown = [];
+    if (tier && (rules.blockedTiers || []).includes(tier)) blocked.push('院校认可名单不覆盖当前本科梯度');
+    if (program.prereqMode === 'strict_ects' && audit.coverage < 0.5 &&
+        normalizedMajor && program.allowedMajors?.length && !isAligned) blocked.push('课表缺少严格先修项目的核心课程');
+    if (minimum !== null && knownAbroadNumber(gpa) && gpa < minimum - 3) blocked.push('均分低于当前院校梯度要求的缓冲线');
+    if (minimum !== null && knownAbroadNumber(gpa) && gpa < minimum) conditions.push('均分需达到 ' + minimum);
+    if (!tier || tier === 'unknown' || !knownAbroadNumber(gpa) || minimum === null) unknown.push('院校梯度或适用均分要求待核实');
+    if (audit.coverage < 1 && program.prereqMode !== 'cross_major_friendly') conditions.push('先修课待补齐或核实');
+    if (program.prereqMode === 'strict_ects') conditions.push('严格 ECTS 学分须按官网逐项复核');
+    if (!verifiedLanguage) conditions.push(program.langPolicy === 'conditional_allowed'
+      ? '项目允许先申请，语言条件仍待完成' : '递交前核实并补齐语言要求');
+    if (!gradTest) conditions.push('GRE 或 GMAT 要求待满足');
+    if (program.greGmatPolicy === 'unknown') conditions.push('GRE 或 GMAT 要求待核实');
+    const season = abroadRoundStatus(program, now);
+    if (season.status === 'closed' || season.status === 'archived') blocked.push('项目当前申请季已关闭或归档');
+    const status = blocked.length ? 'FAIL' : unknown.length ? 'UNKNOWN' : conditions.length ? 'CONDITIONAL' : 'PASS';
+    const samples = cases.filter(item => item.programId === program.id && item.undergradTier === tier &&
+      positiveAdmission(item) && knownAbroadNumber(item.gpaPercent)).map(item => item.gpaPercent).sort((a, b) => a - b);
+    const mid = Math.floor(samples.length / 2);
+    const median = samples.length ? (samples[mid] + samples[Math.floor((samples.length - 1) / 2)]) / 2 : null;
+    let gpaFactor = 0.5;
+    if (minimum !== null && knownAbroadNumber(gpa)) {
+      if (gpa < minimum) gpaFactor = clampAbroad(0.55 - 0.12 * (minimum - gpa));
+      else if (median === null) gpaFactor = 0.55;
+      else if (median > minimum && gpa < median) gpaFactor = 0.55 + 0.25 * (gpa - minimum) / (median - minimum);
+      else gpaFactor = Math.min(1, 0.8 + 0.1 * Math.max(0, gpa - median));
+    }
+    const factors = {
+      list: (rules.blockedTiers || []).includes(tier) ? 0 : minimum === null ? 0.5 : 1,
+      gpa: gpaFactor, prereq: audit.coverage, lang: verifiedLanguage ? 1 : program.langPolicy === 'conditional_allowed' ? 0.5 : 0,
+      gre: program.greGmatPolicy === 'unknown' ? 0.5 : gradTest ? 1 : 0, exp: hasHardcoreExperience(profile) ? 1 : 0.5,
+      budget: knownAbroadNumber(abroadPrefs.budgetRmb) && knownAbroadNumber(program.estTotalRmbPerYear)
+        ? Number(abroadPrefs.budgetRmb >= program.estTotalRmbPerYear) : 0.5,
+      time: season.status === 'open' ? 1 : ['closed','archived'].includes(season.status) ? 0 : 0.5,
+    };
+    const weights = { list: 24, gpa: 24, prereq: 18, lang: 12, gre: 6, exp: 10, budget: 4, time: 2 };
+    const score = Math.round(Object.keys(weights).reduce((sum, key) => sum + weights[key] * factors[key], 0));
+    let band = 'reach';
+    if (status === 'FAIL') band = 'blocked';
+    else if (status === 'PASS' && median !== null && gpa >= Math.max(minimum, median + 1.5) &&
+        factors.prereq >= 0.85 && factors.list >= 0.85) band = 'safety';
+    else if (minimum !== null && gpa >= minimum && score >= 68 && status !== 'UNKNOWN') band = 'match';
+    return { program, score, band, factors, audit, minimum, median, sampleCount: samples.length,
+      eligibility: { status, reasons: [...blocked, ...unknown, ...conditions] } };
+  }
+
+  function matchAbroadPrograms(profile, prefs, programs, now = new Date(), cases = []) {
+    const byProgram = new Map();
+    for (const item of cases) {
+      if (!byProgram.has(item.programId)) byProgram.set(item.programId, []);
+      byProgram.get(item.programId).push(item);
+    }
+    return programs.map(program => evaluateAbroadProgram(profile, prefs, program, now, byProgram.get(program.id)))
+      .sort((a, b) => Number(a.band === 'blocked') - Number(b.band === 'blocked') ||
+        b.score - a.score || a.program.id.localeCompare(b.program.id));
+  }
+
+  function similarAbroadCases(profile = {}, cases = [], { programId, offerLimit = 3, cautionLimit = 2, minSimilarity = 0 } = {}) {
+    const userTier = resolveAbroadTier(profile, {});
+    const userMajor = normalizeAbroadMajor(profile.major);
+    const pool = programId ? cases.filter(item => item.programId === programId) : cases;
+    const ranked = pool.map(item => {
+      const tier = userTier && userTier !== 'unknown' && item.undergradTier !== 'unknown'
+        ? Number(userTier === item.undergradTier) : 0;
+      const gpa = knownAbroadNumber(profile.gpa) && knownAbroadNumber(item.gpaPercent)
+        ? Math.exp(-Math.abs(profile.gpa - item.gpaPercent) / 4) : 0;
+      const major = userMajor && item.majorFamily !== 'other' ? Number(userMajor === item.majorFamily) : 0;
+      const soft = item.highlights?.length && hasHardcoreExperience(profile) ? 1 : 0;
+      return { ...item, similarity: Math.round(35 * tier + 30 * gpa + 25 * major + 10 * soft) };
+    }).filter(item => item.similarity >= minSimilarity)
+      .sort((a, b) => b.similarity - a.similarity || a.id.localeCompare(b.id));
+    return { offers: ranked.filter(positiveAdmission).slice(0, offerLimit),
+      cautions: ranked.filter(item => ['reject', 'waitlist'].includes(item.outcome)).slice(0, cautionLimit) };
+  }
+
+  function abroadRoundStatus(program, now = new Date()) {
+    if (program.livenessStatus === 'archived') return { status:'archived', round:null };
+    const today = now.toISOString().slice(0, 10);
+    const rounds = (program.rounds || []).filter(round => /^\d{4}-\d{2}-\d{2}$/.test(round.deadline))
+      .sort((left, right) => left.deadline.localeCompare(right.deadline));
+    const upcoming = rounds.filter(round => round.deadline >= today);
+    const open = upcoming.find(round => round.openDate && round.openDate <= today);
+    const round = open || upcoming[0] || null;
+    if (!round) return { status:rounds.length || program.livenessStatus === 'closed_season' ? 'closed' : 'unknown', round };
+    return { status:open ? 'open' : round.openDate ? 'upcoming' : 'unconfirmed', round,
+      daysRemaining:Math.round((Date.parse(round.deadline) - Date.parse(today)) / 86400000) };
+  }
+
+  function buildAbroadMilestones(program, now = new Date()) {
+    const {status, round:nextRound} = abroadRoundStatus(program, now);
+    if (status === 'closed' || status === 'archived') return [];
+    const base = { source: 'abroad_deadline', programId: program.id, hours: 0 };
+    const apply = {
+      ...base, id: 'abroad_apply_' + program.id,
+      title: program.titleZh + ' · 网申',
+      detail: nextRound ? nextRound.round + ' · 官网截止日' : '申请截止日待向院校核实',
+      deadline: nextRound?.deadline ?? null,
+    };
+    const requiresLanguageBeforeSubmission = program.langPolicy === 'required_at_submit' || program.langPolicy === 'cet6_accepted';
+    const language = {
+      ...base, id: 'abroad_language_' + program.id,
+      title: program.titleZh + ' · 语言成绩',
+      detail: requiresLanguageBeforeSubmission ? '递交前须备妥合格成绩，具体出分安排以考试机构为准'
+        : program.langPolicy === 'conditional_allowed' ? '可先递交，语言条件的最晚提交日以录取通知为准'
+          : '语言递交要求与截止日待向院校核实',
+      deadline: requiresLanguageBeforeSubmission ? apply.deadline : null,
+    };
+    return [apply, language];
+  }
+
+  function buildAbroadOutline(profile, program) {
+    const modules = (program.coreModules || []).filter(value => typeof value === 'string');
+    const moduleSkills = new Map(modules.map(name => [name, new Set(extractSkillsFromText(name).map(skill => skill.skillId))]));
+    const seen = new Set();
+    const materials = [];
+    for (const item of Array.isArray(profile.evidences) ? profile.evidences : []) {
+      if (!item || typeof item.id !== 'string' || !item.id || seen.has(item.id) || !hasVerifiedEvidence(item)) continue;
+      if (typeof item.title !== 'string' || !item.title.trim()) continue;
+      seen.add(item.id);
+      const skills = Array.isArray(item.skillIds) ? item.skillIds : [];
+      const relatedModules = modules.filter(name => skills.some(id => moduleSkills.get(name).has(id)));
+      const metrics = (Array.isArray(item.metrics) ? item.metrics : []).filter(metric =>
+        metric?.verified === true && typeof metric.label === 'string' &&
+        (knownAbroadNumber(metric.value) || (typeof metric.value === 'string' && metric.value.trim())));
+      materials.push({ evidenceId: item.id, title: item.title, relatedModules,
+        metrics: metrics.length ? metrics.map(metric => metric.label + '：' + metric.value) : ['[待补充实测数据]'] });
+    }
+    materials.sort((a,b) => b.relatedModules.length - a.relatedModules.length);
+    const records = profile.courses || [];
+    const listed = new Set(records.map(course => course.id));
+    const audit = auditPrerequisites([...records, ...(profile.completedCourseIds || []).filter(id => !listed.has(id))], program);
+    const verifiedCourses = [...new Set(audit.rows.flatMap(row => row.completed))];
+    const lines = [
+      '# SOP / PS 与 Academic CV 提纲', '', '目标项目：' + program.titleZh,
+      '', '## SOP / PS', '1. 申请动机：[补充个人动机与目标]',
+      '2. 课程准备：' + (verifiedCourses.join('、') || '[补充可核验课程]'),
+      '3. 经历与项目关联：',
+      ...materials.map(item => '- ' + item.title + '（evidenceId: ' + item.evidenceId + '）' +
+        (item.relatedModules.length ? ' → ' + item.relatedModules.join('、') : '') + ' · ' + item.metrics.join('；')),
+      ...(materials.length ? [] : ['- [补充可核验经历]']),
+      '4. 学习计划：[结合官网课程说明补充]', '', '## Academic CV',
+      ...materials.map(item => '- ' + item.title + '（evidenceId: ' + item.evidenceId + '） · ' + item.metrics.join('；')),
+      ...(materials.length ? [] : ['- [补充可核验经历]']),
+    ];
+    return { programId: program.id, verifiedCourses, materials, markdown: lines.join('\n') + '\n' };
+  }
+
+  function buildAbroadComparison(matches, now = new Date()) {
+    const ordered = [...matches].sort((a,b) => {
+      const deadline = item => buildAbroadMilestones(item.program, now)[0]?.deadline || '9999';
+      return Number(a.band === 'blocked') - Number(b.band === 'blocked') ||
+        deadline(a).localeCompare(deadline(b)) || b.score - a.score || a.program.id.localeCompare(b.program.id);
+    });
+    return ordered.map(({program, eligibility, band}) => ({
+      programId: program.id, title: program.titleZh, band, status: eligibility.status,
+      nextDeadline: buildAbroadMilestones(program, now)[0]?.deadline ?? null,
+      action: eligibility.reasons[0] || '核对官网本轮材料清单后安排递交',
+    }));
+  }
+
   window.CC = {
+    ABROAD_MATCH_VERSION,
+    CASE_SIM_VERSION,
+    inferSchoolTierFromName,
+    normalizeAbroadMajor,
+    abroadRoundStatus,
+    buildAbroadComparison,
+    buildAbroadOutline,
+    buildAbroadMilestones,
+    COURSE_PREREQ_TAGS, auditPrerequisites, evaluateAbroadProgram, matchAbroadPrograms, similarAbroadCases,
     DATA: D, SKILL_BY_ID, COURSE_BY_ID, JOB_BY_ID, REQ_BY_ID, PLACEHOLDER, STATUS_LABEL,
     COMPETITIONS, SOURCES, SOURCE_PROVENANCE, allRequirements,
     sourcesByCategory: () => SOURCES.reduce((acc, s) => { const k = s.category || '其他'; (acc[k] = acc[k] || []).push(s); return acc; }, {}),
