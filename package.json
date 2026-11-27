@@ -4,7 +4,10 @@
   "packageManager": "pnpm@11.25.0",
   "engines": { "node": ">=22.5.0" },
   "scripts": {
-    "check:employment": "node _smoke.mjs && node _employment-contract-test.mjs && node _employment-eval.mjs --self-test && node _build-inline.mjs --check && node _employment-e2e.mjs"
+    "firecrawl:serve": "node _firecrawl-local-serve.mjs",
+    "crawl:experiences": "node _crawl-experiences.mjs",
+    "check:employment": "node _smoke.mjs && node _employment-contract-test.mjs && node _employment-eval.mjs --self-test && node _build-inline.mjs --check && node _employment-e2e.mjs",
+    "check:experience": "node _experience-contract-test.mjs"
   },
   "devDependencies": {
     "ajv": "8.20.0",

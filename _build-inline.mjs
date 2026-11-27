@@ -5,6 +5,12 @@ const page = new URL('./index.html', import.meta.url);
 const html = readFileSync(page, 'utf8');
 const data = readEmploymentData();
 validateEmploymentData(data);
+if (data.experienceIntel) {
+  const expBytes = Buffer.byteLength(JSON.stringify(data.experienceIntel), 'utf8');
+  if (expBytes > 280_000) {
+    throw new Error(`Experience intel snapshot (${expBytes} bytes) exceeds 280KB inline budget`);
+  }
+}
 const engine = readFileSync(new URL('./_cc-engine.js', import.meta.url), 'utf8').trimEnd();
 const startMarker = '/*__CC_START__*/';
 const endMarker = '/*__CC_END__*/';

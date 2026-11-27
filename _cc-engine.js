@@ -2668,6 +2668,357 @@
     };
   }
 
+  /* ---- 实战经验情报精排引擎 (intel-rank-2.0：六维匹配 + MMR多样性重排 + 4槽位周报) ---- */
+  const INTEL_RANK_VERSION = 'intel-rank-2.0';
+  const INTEL_HALF_LIFE_DAYS = {
+    camp_policy: 21,
+    interview_exp: 45,
+    offer_retro: 60,
+    project_guide: 180,
+    pitfall: 180,
+  };
+  const SCHOOL_TIER_INDEX = {
+    non_double_first_class: 1,
+    double_first_class: 2,
+    '211': 2,
+    '985': 3,
+    qingbei: 4,
+    overseas: 3,
+  };
+  const TIER_ZH = {
+    non_double_first_class: '双非院校',
+    double_first_class: '双一流',
+    '211': '211院校',
+    '985': '985院校',
+    qingbei: '顶尖名校',
+    overseas: '海外高校',
+  };
+  const MAJOR_ZH = {
+    cs: '计算机/软件类',
+    mat_mech: '机械/自动化/硬件类',
+    econ: '经管/商科类',
+    chinese: '人文/新媒体类',
+  };
+  const START_ZH = {
+    zero_internship: '零实习起步',
+    has_internship: '已有实习进阶',
+    has_project: '已有项目/竞赛',
+    career_switch: '跨专业转型',
+  };
+
+  function inferSchoolTierFromName(schoolName) {
+    const s = String(schoolName || '').trim();
+    if (!s || /演示|未命名|待填/.test(s)) return 'unknown';
+    if (/清华|北京大学/.test(s)) return 'qingbei';
+    if (/复旦|上海交通|浙江大学|中国科学技术|南京大学|哈尔滨工业|西安交通|北京航空|同济|华中科技|东南大学|武汉大学|中山大学|厦门大学|北京理工|天津大学|南开|山东大学|四川大学|吉林大学|中南大学|大连理工|重庆大学|电子科技|西北工业|华南理工|中国农业|北京师范|华东师范|中国人民大学/.test(s)) {
+      return '985';
+    }
+    if (/邮电|交通大学|理工大学|财经大学|师范大学/.test(s) && /北京邮电|西安电子|南京航空|南京理工|武汉理工|上海财经|中央财经|中南财经|对外经济|华中师范|西南交通|北京交通|河海|江南大学|东华|苏州大学|暨南|华北电力|中国矿业|中国石油|中国地质|合肥工业|福州大学|郑州大学|云南大学|新疆大学/.test(s)) {
+      return '211';
+    }
+    return 'non_double_first_class';
+  }
+
+  function peerBaselineOfProfile(p = {}) {
+    const pctVal = rankPercent(p);
+    const rankBucket = pctVal == null ? 'unknown'
+      : pctVal <= 10 ? 'top10%'
+      : pctVal <= 30 ? '10%-30%' : '>30%';
+    const hasIntern = (p.evidences || []).some(e => canonicalEvidenceType(e) === '实习' && verificationOf(e) !== 'rejected');
+    const startingState = hasIntern ? 'has_internship'
+      : hasHardcoreExperience(p) ? 'has_project' : 'zero_internship';
+    return {
+      schoolTier: inferSchoolTierFromName(p.school || p.schoolLabel || ''),
+      majorFamily: p.major || 'unknown',
+      rankBucket,
+      startingState,
+    };
+  }
+
+  function jaccardSet(arrA, arrB) {
+    if (!arrA?.length || !arrB?.length) return 0;
+    const setA = new Set(arrA);
+    let inter = 0;
+    const union = new Set(arrA);
+    for (const x of arrB) {
+      if (setA.has(x)) inter++;
+      union.add(x);
+    }
+    return union.size ? inter / union.size : 0;
+  }
+
+  function experienceSimilarity(a, b) {
+    const famSim = jaccardSet(a.familyIds, b.familyIds);
+    const skillSim = jaccardSet(a.mappedSkillIds, b.mappedSkillIds);
+    const orgSim = (a.targetOrgs?.length && b.targetOrgs?.some(o => a.targetOrgs.includes(o))) ? 1 : 0;
+    const clusterSim = (a.corroborationCluster && a.corroborationCluster === b.corroborationCluster) ? 1 : 0;
+    return Math.min(1, 0.40 * clusterSim + 0.35 * skillSim + 0.15 * famSim + 0.10 * orgSim);
+  }
+
+  function rankExperienceIntel(p = {}, paths = [], items = null, userPrefs = {}, nowInput = new Date()) {
+    const now = nowInput instanceof Date ? nowInput : new Date(nowInput);
+    const sourceItems = Array.isArray(items) ? items : (D.experienceIntel?.items || []);
+    const prefs = p.preferences || {};
+    const dismissed = new Set(userPrefs?.dismissedIds || []);
+    const readSet = new Set(userPrefs?.readIds || []);
+    const tagWeights = userPrefs?.tagWeights || {};
+    const userPeer = peerBaselineOfProfile(p);
+    const excludedDirs = new Set(prefs.excludedDirectionIds || []);
+
+    // Compute active skill gaps once for O(1) per-card lookup
+    let targetIds = (p.targetReqIds || p.targetJobIds || []).filter(id => REQ_BY_ID.has(id));
+    if (!targetIds.length && p.personalized !== false) {
+      const topMatches = forwardMatch(p, allRequirements().filter(r => r.kind === 'job'), now).all
+        .filter(m => m.eligibility.status !== 'FAIL' && !m.freshness.ended)
+        .slice(0, 5);
+      targetIds = topMatches.map(m => m.req.id);
+    }
+    const rawGaps = targetIds.length ? computeGaps(p, targetIds) : [];
+    const gapWeightById = new Map();
+    for (const g of rawGaps) {
+      if (g.status === 'evidenced') continue;
+      gapWeightById.set(g.skillId, g.status === 'learned_unverified' ? 0.75 : 1.0);
+    }
+
+    const month = now.getUTCMonth() + 1;
+    const scored = [];
+
+    for (const item of sourceItems) {
+      if (!item || item.trustTier === 'C_CLUE' || item.livenessStatus === 'source_removed') continue;
+      if ((item.guidanceScore ?? 0) < 0.55 && item.trustTier !== 'A_OFFICIAL') continue;
+      if (dismissed.has(item.id)) continue;
+      if (excludedDirs.size && item.directionIds?.length && item.directionIds.every(d => excludedDirs.has(d))) continue;
+
+      const why = [];
+
+      // 1. Path & Direction Match M_path ∈ [0, 1] (weight 25)
+      const majorDirs = p.major ? CAREER_DIRECTIONS.filter(d => (d.domain || d.major) === p.major).map(d => d.id) : [];
+      let mPath = 0.65;
+      if (paths.length > 0) {
+        const hitPaths = (item.paths || []).filter(k => paths.includes(k));
+        if (hitPaths.length > 0) {
+          mPath = 0.78;
+          if (prefs.primaryDirectionId && item.directionIds?.includes(prefs.primaryDirectionId)) {
+            mPath = 1.0;
+            const dObj = CAREER_DIRECTIONS.find(d => d.id === prefs.primaryDirectionId);
+            if (dObj) why.push('首选方向·' + dObj.name);
+          } else if (prefs.secondaryDirectionIds?.some(id => item.directionIds?.includes(id))) {
+            mPath = 0.92;
+          } else if (hitPaths.includes('jiuye') && item.directionIds?.length && majorDirs.length) {
+            if (item.directionIds.some(d => majorDirs.includes(d))) {
+              mPath = 0.98;
+              const hitDirObj = CAREER_DIRECTIONS.find(d => majorDirs.includes(d.id) && item.directionIds.includes(d.id));
+              if (hitDirObj) why.push('专业对口方向·' + hitDirObj.name);
+            } else {
+              mPath = 0.25;
+            }
+          } else {
+            const pLabels = { baoyan: '保研', kaoyan: '考研', liuxue: '留学', jiuye: '就业' };
+            why.push('关注路径·' + hitPaths.map(k => pLabels[k] || k).join('/'));
+          }
+        } else {
+          mPath = 0.18;
+        }
+      } else if (item.directionIds?.length && majorDirs.length) {
+        mPath = item.directionIds.some(d => majorDirs.includes(d)) ? 0.88 : 0.45;
+      }
+
+      // 2. Peer Baseline Similarity M_peer ∈ [0, 1] (weight 22)
+      const ab = item.authorBaseline || {};
+      const peerParts = [];
+      let peerMatchedDesc = [];
+      if (ab.majorFamily && ab.majorFamily !== 'unknown' && userPeer.majorFamily !== 'unknown') {
+        const sameMaj = ab.majorFamily === userPeer.majorFamily;
+        peerParts.push(sameMaj ? 1.0 : (ab.startingState === 'career_switch' ? 0.80 : 0.25));
+        if (sameMaj && MAJOR_ZH[ab.majorFamily]) peerMatchedDesc.push(MAJOR_ZH[ab.majorFamily]);
+      }
+      if (ab.schoolTier && ab.schoolTier !== 'unknown' && userPeer.schoolTier !== 'unknown') {
+        const diff = Math.abs((SCHOOL_TIER_INDEX[ab.schoolTier] || 2) - (SCHOOL_TIER_INDEX[userPeer.schoolTier] || 2));
+        const tierScore = diff === 0 ? 1.0 : diff === 1 ? 0.75 : 0.20;
+        peerParts.push(tierScore);
+        if (diff === 0 && TIER_ZH[ab.schoolTier]) peerMatchedDesc.push(TIER_ZH[ab.schoolTier]);
+      }
+      if (ab.startingState && ab.startingState !== 'unknown') {
+        const sameStart = ab.startingState === userPeer.startingState;
+        peerParts.push(sameStart ? 1.0 : (userPeer.startingState === 'zero_internship' && ab.startingState === 'has_project' ? 0.65 : 0.45));
+        if (sameStart && START_ZH[ab.startingState]) peerMatchedDesc.push(START_ZH[ab.startingState]);
+      }
+      if (ab.rankBucket && ab.rankBucket !== 'unknown' && userPeer.rankBucket !== 'unknown' && item.paths?.includes('baoyan')) {
+        const sameRank = ab.rankBucket === userPeer.rankBucket;
+        peerParts.push(sameRank ? 1.0 : 0.50);
+        if (sameRank) peerMatchedDesc.push('排名' + ab.rankBucket);
+      }
+      const mPeer = peerParts.length ? peerParts.reduce((a, b) => a + b, 0) / peerParts.length : 0.58;
+      if (peerMatchedDesc.length) {
+        why.unshift('同起点·' + peerMatchedDesc.slice(0, 2).join('·'));
+      }
+
+      // 3. Skill & Evidence Gap Overlap M_gap ∈ [0, 1] (weight 20)
+      let mGap = 0.50;
+      if (item.mappedSkillIds?.length) {
+        const hitGapSkills = item.mappedSkillIds.filter(id => gapWeightById.has(id));
+        if (hitGapSkills.length > 0) {
+          const sumW = hitGapSkills.reduce((s, id) => s + (gapWeightById.get(id) || 0), 0);
+          mGap = Math.min(1.0, sumW / 1.4);
+          why.push('补齐缺口·' + hitGapSkills.slice(0, 2).map(skillName).join('/'));
+        } else {
+          const statusMap = skillStatusMap(p);
+          const knownOverlap = item.mappedSkillIds.filter(id => statusMap.get(id) && statusMap.get(id) !== 'not_learned');
+          mGap = knownOverlap.length ? 0.62 : 0.25;
+        }
+      }
+
+      // 4. Guidance Quality Q_guide ∈ [0, 1] (weight 15)
+      const qGuide = clamp(Number(item.guidanceScore) || 0.7, 0, 1);
+      if ((item.corroborationCount || 1) >= 3) {
+        why.push(`多源印证·${item.corroborationCount}篇提及`);
+      } else if (item.trustTier === 'A_OFFICIAL') {
+        why.push('A级官方指南');
+      }
+
+      // 5. Time Decay F_time ∈ [0, 1] (weight 10)
+      const pubMs = Date.parse(item.citation?.publishedAt || item.citation?.verifiedAt || '');
+      const ageDays = Number.isFinite(pubMs) ? Math.max(0, (now.getTime() - pubMs) / 86400000) : 30;
+      const halfLife = INTEL_HALF_LIFE_DAYS[item.category] || 60;
+      const batchFactor = item.livenessStatus === 'archived_past_batch' ? 0.55 : 1.0;
+      const fTime = Math.pow(2, -ageDays / halfLife) * batchFactor;
+
+      // 6. Calendar Stage Resonance U_stage ∈ [0, 1] (weight 8)
+      let uStage = 0.55;
+      if ([2, 3, 4].includes(month) && (item.paths?.includes('jiuye') || item.paths?.includes('baoyan'))) uStage = 1.0;
+      else if ([5, 6, 7].includes(month) && (item.paths?.includes('baoyan') || item.category === 'interview_exp')) uStage = 0.95;
+      else if ([8, 9, 10].includes(month)) uStage = 1.0;
+      else if ([11, 12, 1].includes(month) && (item.category === 'project_guide' || item.category === 'offer_retro' || item.category === 'interview_exp')) uStage = 0.92;
+
+      // 7. Local Zero-Knowledge Feedback & Workload Fatigue
+      let bPref = 0;
+      bPref += Number(tagWeights['cat:' + item.category] || 0);
+      bPref += Number(tagWeights['plat:' + item.platform] || 0);
+      if (ab.schoolTier || ab.startingState) {
+        bPref += Number(tagWeights[`peer:${ab.schoolTier || 'unknown'}:${ab.startingState || 'unknown'}`] || 0);
+      }
+      if (item.corroborationCluster) {
+        bPref += Number(tagWeights['cluster:' + item.corroborationCluster] || 0);
+      }
+      for (const sid of item.mappedSkillIds || []) {
+        bPref += Number(tagWeights['skill:' + sid] || 0);
+      }
+      bPref = clamp(bPref, -15, 12);
+
+      let pFatigue = readSet.has(item.id) ? 8 : 0;
+      if ((p.weeklyHours || 8) < 6 && (item.actionTask?.estimatedHours || 0) > 6) {
+        pFatigue += 5;
+      }
+
+      const rawScore = clamp(
+        25 * mPath + 22 * mPeer + 20 * mGap + 15 * qGuide + 10 * fTime + 8 * uStage + bPref - pFatigue,
+        0,
+        100
+      );
+
+      if (!why.length) {
+        why.push(item.category === 'pitfall' ? '通用防坑保护' : '当季高频实操参考');
+      }
+
+      scored.push({
+        ...item,
+        score: Math.round(rawScore),
+        rawScore: round2(rawScore),
+        why: [...new Set(why)].slice(0, 4),
+        factors: {
+          path: round2(mPath),
+          peer: round2(mPeer),
+          gap: round2(mGap),
+          quality: round2(qGuide),
+          freshness: round2(fTime),
+          stage: round2(uStage),
+          prefBonus: round2(bPref),
+          fatiguePenalty: round2(pFatigue),
+        },
+      });
+    }
+
+    scored.sort((a, b) => b.rawScore - a.rawScore || a.id.localeCompare(b.id));
+
+    // Stage 3: MMR Diversity Re-ranking on Top-30 candidates (lambda = 0.72)
+    const lambda = 0.72;
+    const pool = scored.slice(0, 30);
+    const tail = scored.slice(30);
+    const selected = [];
+    while (pool.length > 0) {
+      let bestIdx = 0;
+      let bestMmr = -Infinity;
+      for (let i = 0; i < pool.length; i++) {
+        const cand = pool[i];
+        const maxSim = selected.length
+          ? Math.max(...selected.map(sel => experienceSimilarity(cand, sel)))
+          : 0;
+        const mmr = lambda * (cand.rawScore / 100) - (1 - lambda) * maxSim;
+        if (mmr > bestMmr) {
+          bestMmr = mmr;
+          bestIdx = i;
+        }
+      }
+      const [picked] = pool.splice(bestIdx, 1);
+      picked.mmrScore = round3(bestMmr);
+      selected.push(picked);
+    }
+    return [...selected, ...tail];
+  }
+
+  function buildWeeklyDigest(rankedItems = [], paths = []) {
+    const chosen = [];
+    const usedIds = new Set();
+    const take = (slotKey, slotLabel, pred) => {
+      const hit = rankedItems.find(it => !usedIds.has(it.id) && pred(it));
+      if (hit) {
+        usedIds.add(hit.id);
+        chosen.push({ slotKey, slotLabel, item: hit });
+      }
+    };
+    take('policy_window', '窗口与官方指南', it => it.trustTier === 'A_OFFICIAL' || it.category === 'camp_policy');
+    take('peer_breakthrough', '同起点破局复盘', it => (it.factors?.peer ?? 0) >= 0.7 && ['offer_retro', 'interview_exp'].includes(it.category));
+    take('gap_playbook', '缺口实战与面经', it => (it.factors?.gap ?? 0) >= 0.55 || ['project_guide', 'interview_exp'].includes(it.category));
+    take('pitfall_guard', paths.length > 1 ? '多线协同与避坑' : '求职升学避坑', it => it.category === 'pitfall' || !usedIds.has(it.id));
+
+    for (const it of rankedItems) {
+      if (chosen.length >= 4) break;
+      if (!usedIds.has(it.id)) {
+        usedIds.add(it.id);
+        chosen.push({ slotKey: 'featured', slotLabel: '本周精选攻略', item: it });
+      }
+    }
+    return chosen;
+  }
+
+  function experiencesForPath(pathKey, p = {}, items = null, userPrefs = {}, now = new Date()) {
+    const ranked = rankExperienceIntel(p, [pathKey], items, userPrefs, now);
+    return ranked.filter(it => it.paths?.includes(pathKey)).slice(0, 2);
+  }
+
+  function experiencesForJob(job, p = {}, items = null, userPrefs = {}, now = new Date()) {
+    if (!job) return [];
+    const family = jobFamilyOf(job);
+    const jobSkillSet = new Set((job.skills || []).map(s => s.skillId));
+    const orgName = String(job.org || job.orgLabel || '');
+    const ranked = rankExperienceIntel(p, ['jiuye'], items, userPrefs, now);
+    return ranked
+      .filter(it => it.paths?.includes('jiuye'))
+      .map(it => {
+        let boost = 0;
+        if (orgName && it.targetOrgs?.some(o => orgName.includes(o) || o.includes(orgName))) boost += 25;
+        if (family && it.familyIds?.includes(family.id)) boost += 18;
+        else if (family && it.directionIds?.includes(family.directionId)) boost += 10;
+        const skHits = (it.mappedSkillIds || []).filter(id => jobSkillSet.has(id)).length;
+        boost += skHits * 8;
+        return { item: it, jobRelevance: boost + it.rawScore * 0.5 };
+      })
+      .filter(x => x.jobRelevance >= 35)
+      .sort((a, b) => b.jobRelevance - a.jobRelevance)
+      .slice(0, 3)
+      .map(x => x.item);
+  }
+
   window.CC = {
     DATA: D, SKILL_BY_ID, COURSE_BY_ID, JOB_BY_ID, REQ_BY_ID, PLACEHOLDER, STATUS_LABEL,
     COMPETITIONS, SOURCES, SOURCE_PROVENANCE, allRequirements,
@@ -2686,6 +3037,7 @@
     EVIDENCE_TYPE_WEIGHT, canonicalEvidenceType, evidenceKindOf, hasHardcoreExperience,
     SELF_STUDY_CATALOG, selfStudyFor, buildColdStartCourseworkGuide, extractHardGateObject,
     EMPLOYMENT_SCHEMA_VERSION, MATCH_VERSION, TAXONOMY_VERSION, MATCH_WEIGHTS, DEGREE_LABEL, ELIGIBILITY_LABEL, LINK_LABEL, STATUS_LABELS,
+    INTEL_RANK_VERSION, peerBaselineOfProfile, rankExperienceIntel, buildWeeklyDigest, experiencesForPath, experiencesForJob,
     coursesOfMajor, skillName, courseName, rankPercent, pathPriority,
     djb2, snapshotHash, checkUpdate, majorOf, resolveCourseId, ccProfileFromState, gradYearFromGrade, PATH_MAP,
   };

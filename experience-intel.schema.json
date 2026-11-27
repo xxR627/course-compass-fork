@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "experience-intel.schema.json",
+  "title": "ExperienceIntelItem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "schemaVersion", "platform", "platformLabel", "trustTier", "livenessStatus", "category", "title", "tldr", "paths", "directionIds", "familyIds", "mappedSkillIds", "targetOrgs", "targetGradYear", "authorBaseline", "keySteps", "interviewQuestions", "pitfalls", "actionTask", "guidanceScore", "corroborationCount", "citation"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^exp_[a-z0-9]+(?:_[a-z0-9]+)*$", "maxLength": 80 },
+    "schemaVersion": { "const": "1.0" },
+    "platform": { "enum": ["xiaohongshu", "zhihu", "nowcoder", "github_exp", "bilibili_edu"] },
+    "platformLabel": { "$ref": "#/$defs/Text", "type": "string", "maxLength": 40 },
+    "trustTier": { "enum": ["A_OFFICIAL", "B_EXPERIENCE", "C_CLUE"] },
+    "livenessStatus": { "enum": ["active", "archived_past_batch", "source_removed"] },
+    "category": { "enum": ["interview_exp", "offer_retro", "project_guide", "camp_policy", "pitfall"] },
+    "title": { "$ref": "#/$defs/Text", "type": "string", "maxLength": 160 },
+    "tldr": { "$ref": "#/$defs/Text" },
+    "paths": {
+      "type": "array", "uniqueItems": true, "minItems": 1, "maxItems": 4,
+      "items": { "enum": ["baoyan", "kaoyan", "liuxue", "jiuye"] }
+    },
+    "directionIds": { "$ref": "#/$defs/IdList" },
+    "familyIds": { "$ref": "#/$defs/IdList" },
+    "mappedSkillIds": { "$ref": "#/$defs/IdList" },
+    "targetOrgs": { "type": "array", "uniqueItems": true, "maxItems": 12, "items": { "$ref": "#/$defs/Text" } },
+    "targetGradYear": { "type": ["integer", "null"], "minimum": 2000, "maximum": 2200 },
+    "authorBaseline": { "$ref": "#/$defs/AuthorBaseline" },
+    "keySteps": { "$ref": "#/$defs/TextList", "type": "array", "maxItems": 4 },
+    "interviewQuestions": { "$ref": "#/$defs/TextList" },
+    "pitfalls": { "$ref": "#/$defs/TextList" },
+    "actionTask": { "$ref": "#/$defs/ActionTask" },
+    "guidanceScore": { "type": "number", "minimum": 0, "maximum": 1 },
+    "corroborationCount": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+    "corroborationCluster": { "type": "string", "pattern": "^[a-z0-9_:-]+$", "maxLength": 160 },
+    "citation": { "$ref": "#/$defs/Citation" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "trustTier": { "const": "A_OFFICIAL" } } },
+      "then": {
+        "properties": { "platform": { "const": "bilibili_edu" }, "citation": { "$ref": "#/$defs/OfficialCitation" } }
+      }
+    }
+  ],
+  "$defs": {
+    "Text": { "type": "string", "pattern": "\\S", "maxLength": 480 },
+    "TextList": { "type": "array", "uniqueItems": true, "maxItems": 12, "items": { "$ref": "#/$defs/Text" } },
+    "IdList": {
+      "type": "array", "uniqueItems": true, "maxItems": 40,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$", "maxLength": 80 }
+    },
+    "AuthorBaseline": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schoolTier", "majorFamily", "rankBucket", "startingState"],
+      "properties": {
+        "schoolTier": { "enum": ["unknown", "non_double_first_class", "double_first_class", "211", "985", "qingbei", "overseas"] },
+        "majorFamily": { "enum": ["unknown", "cs", "mat_mech", "econ", "chinese", "other"] },
+        "rankBucket": { "enum": ["unknown", "top10%", "10%-30%", ">30%"] },
+        "startingState": { "enum": ["unknown", "zero_internship", "has_internship", "has_project", "career_switch"] }
+      }
+    },
+    "ActionTask": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title", "estimatedHours", "deliverable", "targetModule"],
+      "properties": {
+        "title": { "$ref": "#/$defs/Text" },
+        "estimatedHours": { "type": "number", "exclusiveMinimum": 0, "maximum": 168 },
+        "deliverable": { "$ref": "#/$defs/Text" },
+        "targetModule": { "enum": ["conflict", "interview", "evidence"] }
+      }
+    },
+    "Citation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceUrl", "publishedAt", "verifiedAt", "extractMode", "disclaimer"],
+      "properties": {
+        "sourceUrl": { "type": "string", "format": "uri", "pattern": "^https://[^/?#@]+(?:/|\\?|#|$)", "maxLength": 2048 },
+        "publishedAt": { "anyOf": [{ "$ref": "#/$defs/ObservationDate" }, { "type": "null" }] },
+        "verifiedAt": { "$ref": "#/$defs/ObservationDate" },
+        "extractMode": { "enum": ["full_markdown", "search_snippet"] },
+        "disclaimer": { "$ref": "#/$defs/Text" }
+      }
+    },
+    "OfficialCitation": {
+      "type": "object",
+      "properties": {
+        "sourceUrl": { "type": "string", "pattern": "^https://(?:[a-z0-9-]+\\.)+edu\\.cn(?:/|\\?|#|$)" },
+        "extractMode": { "const": "full_markdown" }
+      }
+    },
+    "ObservationDate": {
+      "anyOf": [{ "type": "string", "format": "date" }, { "type": "string", "format": "date-time" }]
+    }
+  }
+}

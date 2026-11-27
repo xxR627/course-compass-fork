@@ -7,6 +7,7 @@ import { createEmploymentCatalogHandler } from './_employment-catalog-api.mjs';
 import { callCloudChat, createEmploymentLlmHandler, discoverLocalModels, getEnvCloudConfig, getEnvCloudProviders } from './_employment-llm.mjs';
 import { createEmploymentLiveApiHandler } from './_employment-live-api.mjs';
 import { createLocalIdentityHandler, defaultIdentityDbPath } from './_employment-identity-api.mjs';
+import { createExperienceIntelHandler } from './_experience-api.mjs';
 
 const page = new URL('./index.html', import.meta.url);
 const reviewPath = '/api/employment/evidence-review';
@@ -78,6 +79,8 @@ export function createCourseCompassServer({
   jobsDbPath,
   calendarDbPath,
   jdTextDbPath,
+  experiencesDbPath,
+  crawlRunner,
   identityDbPath = ':memory:',
 } = {}) {
   let reviewInProgress = false;
@@ -100,6 +103,7 @@ export function createCourseCompassServer({
 
   const catalog = createEmploymentCatalogHandler({ file: catalogFile, growthModel, growth });
   const liveApi = createEmploymentLiveApiHandler({ catalogFile, jobsDbPath, calendarDbPath, jdTextDbPath, fetcher: liveFetcher });
+  const experienceApi = createExperienceIntelHandler({ catalogFile, experiencesDbPath, crawlRunner });
   const llmHandler = llm || createEmploymentLlmHandler({
     endpoint: llmEndpoint,
     defaultModel: model || growthModel || null,
@@ -117,6 +121,13 @@ export function createCourseCompassServer({
     }
     if (await identity(request, pathname, send)) return;
     const readLocalJson = localJsonReader(request);
+    if (pathname.startsWith('/api/intel/')) {
+      if (!isLocalBrowserAllowed(request)) {
+        request.resume();
+        return send(403, { error: 'CROSS_ORIGIN_FORBIDDEN' });
+      }
+      if (await experienceApi(request, pathname, send, readLocalJson)) return;
+    }
     if (pathname.startsWith('/api/employment/live/') || pathname === '/api/employment/warehouse/search' || pathname === '/api/employment/calendar') {
       if (!isLocalBrowserAllowed(request)) {
         request.resume();

@@ -65259,5 +65259,919 @@
       "asOf": "2026-10-27",
       "notes": "入口页标题：2027年度工银安盛校园招聘公告-2027银行校园招聘_秋招公告_春招公告_笔试；网申时间证据：招聘站职位列表；城市证据：招聘站职位列表"
     }
-  ]
+  ],
+  "experienceIntel": {
+    "schemaVersion": "1.0",
+    "updatedAt": "2026-11-27",
+    "totalWarehouseCount": 15,
+    "items": [
+      {
+        "id": "exp_edu_official_camp_notice",
+        "schemaVersion": "1.0",
+        "platform": "bilibili_edu",
+        "platformLabel": "高校官方就业网",
+        "trustTier": "A_OFFICIAL",
+        "livenessStatus": "active",
+        "category": "camp_policy",
+        "title": "高校毕业生就业指导中心：应届生秋季双选会、基层选调与网申材料规范准备指南",
+        "tldr": "明确应届生三方协议网签流程、选调生校内推荐盖章前置时间窗口与成绩单/学生干部证明提前办理要求。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.93,
+        "corroborationCount": 1,
+        "paths": [
+          "jiuye",
+          "baoyan"
+        ],
+        "directionIds": [],
+        "familyIds": [],
+        "mappedSkillIds": [],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "unknown",
+          "majorFamily": "unknown",
+          "rankBucket": "unknown",
+          "startingState": "unknown"
+        },
+        "keySteps": [
+          "提前在教务自助机或学信网备妥加盖公章的历年成绩单PDF、教育部学籍在线验证报告与四六级证书扫描件",
+          "意向报考选调生或专项计划的同学需在公告发布前完成院系党团关系、学生骨干任职证明与获奖证书原件核对"
+        ],
+        "interviewQuestions": [],
+        "pitfalls": [
+          "部分省市选调生校内汇总推荐截止早于全省网申关闭日2–3天，务必盯紧本校就业信息网院系审核节点"
+        ],
+        "actionTask": {
+          "title": "统一归档学籍在线验证报告、盖章成绩单PDF与获奖/任职证明扫描件夹",
+          "estimatedHours": 1.5,
+          "deliverable": "标准化网申证明材料本地文件夹",
+          "targetModule": "conflict"
+        },
+        "citation": {
+          "sourceUrl": "https://scc.pku.edu.cn/employment/guide/202611",
+          "publishedAt": "2026-11-10",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "高校与主管部门公开政策通知原文提炼，具体执行以本校就业中心当年最新通知为准"
+        },
+        "corroborationCluster": "policy:campus_official_prep"
+      },
+      {
+        "id": "exp_nc_tx_redis_go",
+        "schemaVersion": "1.0",
+        "platform": "nowcoder",
+        "platformLabel": "牛客网",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "interview_exp",
+        "title": "双非计算机零大厂实习，腾讯后端日常实习一面+二面45分钟追问复盘",
+        "tldr": "无大厂背书时重点把1个高并发缓存与限流模块压测数据讲透，面试官连续追问Redis锁续期失效与MySQL慢查询排查闭环。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.92,
+        "corroborationCount": 1,
+        "paths": [
+          "jiuye"
+        ],
+        "directionIds": [
+          "software"
+        ],
+        "familyIds": [
+          "backend"
+        ],
+        "mappedSkillIds": [
+          "golang",
+          "redis",
+          "sql_rdbms",
+          "computer_networks",
+          "os"
+        ],
+        "targetOrgs": [
+          "腾讯"
+        ],
+        "authorBaseline": {
+          "schoolTier": "non_double_first_class",
+          "majorFamily": "cs",
+          "rankBucket": "10%-30%",
+          "startingState": "zero_internship"
+        },
+        "keySteps": [
+          "将课程选课或秒杀玩具项目剥离纯CRUD，加入Redis Lua原子扣减与wrk压测前后QPS/P99延迟对比表",
+          "对简历上写的每个中间件准备『为什么选它 + 极端宕机丢消息怎么兜底』两层追问笔记",
+          "先投3家中小厂日常实习练真机面试表达，录下复盘音频修正卡壳点后再投核心大厂部门"
+        ],
+        "interviewQuestions": [
+          "Redis分布式锁如果业务还没执行完锁过期了怎么办？主从切换丢锁如何保障业务幂等？",
+          "MySQL联合索引在什么场景下会发生索引失效？给你一条慢SQL现场说说EXPLAIN排查顺序？",
+          "TCP TIME_WAIT过多会导致什么现象？高并发短连接网关层应该如何调优？"
+        ],
+        "pitfalls": [
+          "切忌在简历写熟悉高并发却答不出本机压测并发连接数、QPS峰值和报错率真实数字"
+        ],
+        "actionTask": {
+          "title": "为现有后端项目补齐wrk压测P99对比表与Redis锁异常幂等兜底说明",
+          "estimatedHours": 4,
+          "deliverable": "项目README压测章节与3道缓存/索引高频追问口述稿",
+          "targetModule": "interview"
+        },
+        "citation": {
+          "sourceUrl": "https://www.nowcoder.com/discuss/684291035182743552",
+          "publishedAt": "2026-11-18",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "backend:redis"
+      },
+      {
+        "id": "exp_nc_ai_agent_rag",
+        "schemaVersion": "1.0",
+        "platform": "nowcoder",
+        "platformLabel": "牛客网",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "interview_exp",
+        "title": "27届大模型应用与AI Agent实习面经：从RAG召回评测到Tool Calling容错",
+        "tldr": "面试已不再满足于调通LangChain Demo，核心考察切片召回准确率量化评估集、幻觉溯源校验与工具调用超时回退。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.91,
+        "corroborationCount": 1,
+        "paths": [
+          "jiuye"
+        ],
+        "directionIds": [
+          "data"
+        ],
+        "familyIds": [
+          "ai-applications",
+          "machine-learning"
+        ],
+        "mappedSkillIds": [
+          "llm_app_dev",
+          "ai_agent_workflow",
+          "python",
+          "nlp"
+        ],
+        "targetOrgs": [
+          "字节跳动",
+          "阿里巴巴"
+        ],
+        "authorBaseline": {
+          "schoolTier": "211",
+          "majorFamily": "cs",
+          "rankBucket": "10%-30%",
+          "startingState": "has_project"
+        },
+        "keySteps": [
+          "构建包含50条真实边界问题的离线黄金评测集，对比纯向量检索与BM25混合重排的Recall@5提升幅度",
+          "为Agent工具调用层增加JSON Schema严格校验、单步超时熔断与最大循环步数守卫",
+          "在README附上端到端首字延迟TTFT与单次任务Token成本统计表"
+        ],
+        "interviewQuestions": [
+          "你的RAG系统出现答非所问时，如何定量区分是检索召回漏了还是生成阶段产生了幻觉？",
+          "多步Agent工具调用出现死循环或外部API返回503时，状态机如何安全降级？"
+        ],
+        "pitfalls": [
+          "只展示前端聊天框截图而没有任何召回率/准确率评测指标的套壳项目极易在一面被刷"
+        ],
+        "actionTask": {
+          "title": "为AI应用或课设建立30题最小评测集并记录混合检索前后准确率对比",
+          "estimatedHours": 4.5,
+          "deliverable": "评测脚本、Recall@5对比表与失败badcase归因记录",
+          "targetModule": "evidence"
+        },
+        "citation": {
+          "sourceUrl": "https://www.nowcoder.com/discuss/691045281936015360",
+          "publishedAt": "2026-11-22",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "ai-applications:llm_app_dev"
+      },
+      {
+        "id": "exp_nc_emb_stm32_can",
+        "schemaVersion": "1.0",
+        "platform": "nowcoder",
+        "platformLabel": "牛客网",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "project_guide",
+        "title": "机械/自动化冷启动转嵌入式固件：把单片机课设改造成车企认可的硬核证据",
+        "tldr": "仅有STM32流水灯课设难过简历关，补齐FreeRTOS多任务调度、CAN总线丢包恢复测试与示波器时序实测图即可破局。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.9,
+        "corroborationCount": 1,
+        "paths": [
+          "jiuye"
+        ],
+        "directionIds": [
+          "embedded",
+          "automation"
+        ],
+        "familyIds": [
+          "firmware",
+          "automation-control"
+        ],
+        "mappedSkillIds": [
+          "embedded_c",
+          "mcu",
+          "rtos",
+          "industrial_bus",
+          "control_system"
+        ],
+        "targetOrgs": [
+          "比亚迪",
+          "博世",
+          "蔚来"
+        ],
+        "authorBaseline": {
+          "schoolTier": "non_double_first_class",
+          "majorFamily": "mat_mech",
+          "rankBucket": "10%-30%",
+          "startingState": "zero_internship"
+        },
+        "keySteps": [
+          "将原裸机while(1)轮询课设拆分为FreeRTOS采集、PID控制与CAN上报三个独立优先级任务",
+          "设计拔插总线与高负载注入异常实验，记录错误帧计数、看门狗复位与状态恢复耗时",
+          "整理原理图局部截图、逻辑分析仪/示波器波形图与代码仓库作为一页式作品附件"
+        ],
+        "interviewQuestions": [
+          "高优先级任务一直占用CPU导致低优先级任务饥饿或优先级反转，FreeRTOS中用什么机制解决？",
+          "CAN总线仲裁机制是怎么工作的？总线关闭（Bus-Off）后固件如何安全恢复？"
+        ],
+        "pitfalls": [
+          "不要只罗列调过哪些外设库函数，硬件岗面试必问排查过最棘手的一次死机或通信丢包过程"
+        ],
+        "actionTask": {
+          "title": "将现有单片机/控制课设补充异常工况测试记录与时序波形证据",
+          "estimatedHours": 5,
+          "deliverable": "带任务划分图与异常恢复实测数据的硬件作品集文档",
+          "targetModule": "evidence"
+        },
+        "citation": {
+          "sourceUrl": "https://www.nowcoder.com/discuss/687519204810637312",
+          "publishedAt": "2026-11-15",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "firmware:embedded_c"
+      },
+      {
+        "id": "exp_zh_econ_bi_intern",
+        "schemaVersion": "1.0",
+        "platform": "zhihu",
+        "platformLabel": "知乎",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "interview_exp",
+        "title": "经管商科暑期/日常实习破局：商业分析师与数据运营SQL+业务异动拆解真题复盘",
+        "tldr": "经管同学冲互联网商分或券商行研，硬门槛是窗口函数SQL熟练度与结构化异动归因框架，商赛报告需提炼出定量验证假设。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.89,
+        "corroborationCount": 1,
+        "paths": [
+          "jiuye"
+        ],
+        "directionIds": [
+          "data",
+          "finance"
+        ],
+        "familyIds": [
+          "data-analysis",
+          "finance-investment"
+        ],
+        "mappedSkillIds": [
+          "sql_bi",
+          "data_analysis",
+          "business_analysis",
+          "financial_modeling",
+          "statistics"
+        ],
+        "targetOrgs": [
+          "美团",
+          "滴滴",
+          "中金"
+        ],
+        "authorBaseline": {
+          "schoolTier": "211",
+          "majorFamily": "econ",
+          "rankBucket": "10%-30%",
+          "startingState": "zero_internship"
+        },
+        "keySteps": [
+          "集中攻克SQL留存率、连续登录、分组TopN三类高频窗口函数笔试题并配合公开数据集搭1张BI看板",
+          "将正大杯市调或商赛经历改写为『业务问题假设 → 样本清洗与检验 → 策略收益测算』三段论",
+          "准备一套标准的次日留存/GMV下跌异动排查树（内外部因素 × 渠道/新老用户/漏斗环节切分）"
+        ],
+        "interviewQuestions": [
+          "某核心城市昨日订单转化率突然下跌12%，请给出你前30分钟的数据排查维度与验证顺序？",
+          "如何用SQL写出新注册用户在首单后第7天与第30天的留存率？如果存在促销活动干扰怎么评估净效应？"
+        ],
+        "pitfalls": [
+          "商赛PPT里宏观行业套话过多而缺乏本人亲手跑的SQL/Python数据清洗细节，很容易被业务面质疑参与度"
+        ],
+        "actionTask": {
+          "title": "用公开电商数据集完成1次留存漏斗SQL查询与指标异动归因演练",
+          "estimatedHours": 3,
+          "deliverable": "SQL查询脚本、看板截图与1页异动归因框架笔记",
+          "targetModule": "interview"
+        },
+        "citation": {
+          "sourceUrl": "https://zhuanlan.zhihu.com/p/719482635",
+          "publishedAt": "2026-11-16",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "search_snippet",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "data-analysis:sql_bi"
+      },
+      {
+        "id": "exp_edu_pitfall_contract",
+        "schemaVersion": "1.0",
+        "platform": "bilibili_edu",
+        "platformLabel": "B站专栏",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "pitfall",
+        "title": "求职与升学防坑实录：识别付费内推、培训贷与三方违约金霸王条款的5条铁律",
+        "tldr": "凡是要求交费开通内推绿通、入职前贷款培训或口头承诺期权不写进Offer附件的一律拒绝，签三方前务必核清试用期薪资折算与违约金上限。",
+        "targetGradYear": null,
+        "guidanceScore": 0.88,
+        "corroborationCount": 1,
+        "paths": [
+          "jiuye",
+          "baoyan",
+          "kaoyan",
+          "liuxue"
+        ],
+        "directionIds": [],
+        "familyIds": [],
+        "mappedSkillIds": [],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "unknown",
+          "majorFamily": "unknown",
+          "rankBucket": "unknown",
+          "startingState": "unknown"
+        },
+        "keySteps": [
+          "投递校招与实习一律通过企业官方招聘门户、认证校园公众号或本校就业信息网核验入口",
+          "收到意向书后逐项核对Base月薪、年终构成、五险一金缴纳基数比例、试用期时长及三方违约金对等条款",
+          "遇到任何『评论区扣1付费领内部绝密题库/付费远程挂靠实习证明』直接拉黑，背景调查一查即穿"
+        ],
+        "interviewQuestions": [],
+        "pitfalls": [
+          "购买虚假远程挂靠实习不仅无法回答面试官业务细节追问，更会在大厂入职背调社保/导师核实环节直接取消录用资格"
+        ],
+        "actionTask": {
+          "title": "建立个人投递核验清单：仅使用官方ATS入口并核清Offer薪资与三方解约条款",
+          "estimatedHours": 1,
+          "deliverable": "Offer条款核对十问检查单",
+          "targetModule": "conflict"
+        },
+        "citation": {
+          "sourceUrl": "https://www.bilibili.com/read/cv39481205",
+          "publishedAt": "2026-11-12",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "general:anti_scam_pitfall"
+      },
+      {
+        "id": "exp_xhs_chn_ops_portfolio",
+        "schemaVersion": "1.0",
+        "platform": "xiaohongshu",
+        "platformLabel": "小红书",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "offer_retro",
+        "title": "双非汉语言文学零大厂背景，靠校园账号A/B实测作品集拿下互联网内容运营实习",
+        "tldr": "文科求职最忌简历全是『协助负责文案排版』形容词，用1份含选题矩阵、封面A/B点击率对比和低粉爆款复盘的PDF作品集直接破局。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.87,
+        "corroborationCount": 1,
+        "paths": [
+          "jiuye"
+        ],
+        "directionIds": [
+          "content",
+          "product"
+        ],
+        "familyIds": [
+          "editorial",
+          "product-operations"
+        ],
+        "mappedSkillIds": [
+          "content_ops",
+          "new_media_ops",
+          "copywriting",
+          "growth_ops",
+          "data_analysis"
+        ],
+        "targetOrgs": [
+          "小红书",
+          "哔哩哔哩",
+          "美团"
+        ],
+        "authorBaseline": {
+          "schoolTier": "non_double_first_class",
+          "majorFamily": "chinese",
+          "rankBucket": "10%-30%",
+          "startingState": "zero_internship"
+        },
+        "keySteps": [
+          "把过往院媒/公众号或个人账号发过的10篇内容汇总成曝光—点击率—完读率漏斗复盘表",
+          "针对目标产品近期活动写1份3页以内的拆解报告（受众痛点、竞品玩法对比、2套可执行选题脚本）",
+          "投递时将作品集在线链接放在简历首屏个人信息栏下方，提高业务面直通率"
+        ],
+        "interviewQuestions": [
+          "挑一篇你数据最好和最差的内容对比，当时标题和前三秒切入点做了什么调整带来点击率变化？",
+          "如果给你一个冷启动新栏目，前两周没有投流预算你如何验证选题方向是否成立？"
+        ],
+        "pitfalls": [
+          "作品集切忌堆砌几十页未经分类的截图长图，HR与业务面试官停留时间通常不超过90秒"
+        ],
+        "actionTask": {
+          "title": "整理过往文案/校园新媒体经历为含CTR转化对比的3页精选作品集摘要",
+          "estimatedHours": 3.5,
+          "deliverable": "结构化运营作品集文档（背景目标+A/B动作+数据结果）",
+          "targetModule": "evidence"
+        },
+        "citation": {
+          "sourceUrl": "https://www.xiaohongshu.com/explore/673c91a8000000001b02d4e1",
+          "publishedAt": "2026-11-19",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "search_snippet",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "editorial:content_ops"
+      },
+      {
+        "id": "exp_gh_ab2a7955",
+        "schemaVersion": "1.0",
+        "platform": "github_exp",
+        "platformLabel": "GitHub 开源经验仓",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "camp_policy",
+        "title": "GitHub - Haoyu-Gu/camp-tracker: 保研夏令营信息追踪系统 - Flask web dashboard + crawler for tracking graduate school summer camp applications · GitHub",
+        "tldr": "## Repository navigation",
+        "targetGradYear": null,
+        "guidanceScore": 0.84,
+        "corroborationCount": 1,
+        "paths": [
+          "baoyan",
+          "jiuye"
+        ],
+        "directionIds": [],
+        "familyIds": [],
+        "mappedSkillIds": [
+          "python",
+          "git_collab",
+          "web_frontend",
+          "api_design",
+          "language_norm"
+        ],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "qingbei",
+          "majorFamily": "cs",
+          "rankBucket": "unknown",
+          "startingState": "unknown"
+        },
+        "keySteps": [
+          "状态追踪 ：自动检测申请状态（未开始 → 待套磁 → 已套磁 → 材料准备中 → 材料已提交 → 已入营）",
+          "在 `webapp/app.py` 中修改 `SCHOOL_FOLDERS` 和 `SCHOOL_INFO` 字典，同时在 `monitor/crawler.py` 的 `MONITOR_TARGETS` 中添加对应的监控 URL。"
+        ],
+        "interviewQuestions": [],
+        "pitfalls": [],
+        "actionTask": {
+          "title": "结合Python实战要点，在经历工坊升级1项可核验项目/课设证据",
+          "estimatedHours": 4,
+          "deliverable": "包含角色、动作与可验证量化指标的经历条目",
+          "targetModule": "evidence"
+        },
+        "citation": {
+          "sourceUrl": "https://github.com/Haoyu-Gu/camp-tracker",
+          "publishedAt": "2026-11-27",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "baoyan:python"
+      },
+      {
+        "id": "exp_nc_6cb0ed21",
+        "schemaVersion": "1.0",
+        "platform": "nowcoder",
+        "platformLabel": "牛客网",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "archived_past_batch",
+        "category": "interview_exp",
+        "title": "2026 届春招/秋招测试开发面试复盘：从工具使用到测试体系思维的跨越_牛客网",
+        "tldr": "[开心的加菲猫人狠话不多]([已脱敏]",
+        "targetGradYear": 2026,
+        "guidanceScore": 0.84,
+        "corroborationCount": 1,
+        "paths": [
+          "kaoyan",
+          "jiuye"
+        ],
+        "directionIds": [
+          "systems"
+        ],
+        "familyIds": [
+          "systems-development"
+        ],
+        "mappedSkillIds": [
+          "computer_vision",
+          "linux_deploy",
+          "software_testing",
+          "ai_agent_workflow",
+          "java",
+          "data_structures"
+        ],
+        "targetOrgs": [
+          "快手",
+          "大疆"
+        ],
+        "authorBaseline": {
+          "schoolTier": "non_double_first_class",
+          "majorFamily": "mat_mech",
+          "rankBucket": "unknown",
+          "startingState": "unknown"
+        },
+        "keySteps": [
+          "届春招/秋招测试开发面试复盘：从工具使用到测试体系思维的跨越",
+          "在准备测试开发岗位面试的过程中，很多同学最容易陷入的误区是“唯工具论”——简历上罗列了 Selenium、JMeter、Appium、Postman 等十几种工具，但面试官一深挖底层原理或异常排查思路，瞬间就答不上来了。",
+          "结合近期和几位拿到大厂测开 Offer 同学的交流，以及真实的面试高频考察点，整理了三个在面试中最容易拉分的核心问题和真实应对思路。",
+          "测试数据与环境耦合严重。 用例之间没有做好数据隔离，比如第一条用例修改了用户状态，导致第二条用例直接报错，每次跑回归前都要人工花半天造数据。"
+        ],
+        "interviewQuestions": [
+          "自动化测试为什么在很多团队里“跑不起来”？",
+          "接口压测时，TPS 上不去一定是服务端性能瓶颈吗？",
+          "在性能测试环节，面试官经常会抛出这样一个排错场景：用 JMeter 对核心查询接口压测，并发加到 500 时，TPS 停滞不前，但服务端 CPU 和内存使用率却不到 30%，可能是什么原因？"
+        ],
+        "pitfalls": [],
+        "actionTask": {
+          "title": "针对「自动化测试为什么在很多团队里“跑不起来”？」完成口述复盘与项目追问演练",
+          "estimatedHours": 2.5,
+          "deliverable": "面试复盘问答笔记与对应项目指标核对清单",
+          "targetModule": "interview"
+        },
+        "citation": {
+          "sourceUrl": "https://www.nowcoder.com/discuss/952206856414375936",
+          "publishedAt": "2026-11-27",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "systems-development:computer_vision"
+      },
+      {
+        "id": "exp_nc_99ff3093",
+        "schemaVersion": "1.0",
+        "platform": "nowcoder",
+        "platformLabel": "牛客网",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "interview_exp",
+        "title": "腾讯用户增长产品策划实习复盘_牛客网",
+        "tldr": "2022-02-23 10:34 已编辑 腾讯_CSIG_技术产品",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.84,
+        "corroborationCount": 1,
+        "paths": [
+          "kaoyan",
+          "jiuye"
+        ],
+        "directionIds": [
+          "data",
+          "systems"
+        ],
+        "familyIds": [
+          "ai-applications",
+          "software-quality",
+          "systems-development"
+        ],
+        "mappedSkillIds": [
+          "spring_boot",
+          "excel_advanced",
+          "growth_ops",
+          "java",
+          "software_testing",
+          "data_analysis"
+        ],
+        "targetOrgs": [
+          "腾讯",
+          "阿里巴巴",
+          "快手",
+          "大疆"
+        ],
+        "authorBaseline": {
+          "schoolTier": "non_double_first_class",
+          "majorFamily": "mat_mech",
+          "rankBucket": "unknown",
+          "startingState": "unknown"
+        },
+        "keySteps": [
+          "下面从这几个方面对实习进行复盘：",
+          "说话结论先行，有条理、有逻辑，1，2，3",
+          "干活满满 对我这个复盘增长产品实习的秋招狗如救命稻草",
+          "牛来牛客： 你已有ERP和营养餐个人实践，可以如实写项目经历，不用包装实习。先把ERP里一条真实缺陷讲清：怎样触发、如何定位、修复后怎么验证；投实习再写明到岗时间和每周可实习天数。"
+        ],
+        "interviewQuestions": [
+          "一句话描述用户增长产品策划主要做什么？",
+          "实习过程中主要的工作是什么，具体需要什么能力点，可以得到哪些锻炼？",
+          "此次实习有哪些收获？",
+          "在实习的过程中，还帮导师做了其他实习生的一面面试官，从面试官的角度来看面试过程中应该考察什么能力？"
+        ],
+        "pitfalls": [],
+        "actionTask": {
+          "title": "针对「一句话描述用户增长产品策划主要做什么？」完成口述复盘与项目追问演练",
+          "estimatedHours": 2.5,
+          "deliverable": "面试复盘问答笔记与对应项目指标核对清单",
+          "targetModule": "interview"
+        },
+        "citation": {
+          "sourceUrl": "https://www.nowcoder.com/discuss/437865",
+          "publishedAt": "2026-11-27",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "ai-applications:spring_boot"
+      },
+      {
+        "id": "exp_gh_baoyan_pre_camp",
+        "schemaVersion": "1.0",
+        "platform": "github_exp",
+        "platformLabel": "GitHub 开源经验仓",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "offer_retro",
+        "title": "排名15%–25%边缘保研实战指南：如何错峰布局夏令营海投与9月预推免主力战",
+        "tldr": "近年大量高校将核心录取名额后移至9月预推免，边缘排名同学切忌因6月夏令营未入营而弃赛，8月打磨好1项扎实工程/科研作品是翻盘关键。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.91,
+        "corroborationCount": 4,
+        "paths": [
+          "baoyan"
+        ],
+        "directionIds": [
+          "software",
+          "data",
+          "embedded"
+        ],
+        "familyIds": [
+          "backend",
+          "machine-learning",
+          "firmware"
+        ],
+        "mappedSkillIds": [
+          "algorithms",
+          "python",
+          "cpp_modern"
+        ],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "non_double_first_class",
+          "majorFamily": "cs",
+          "rankBucket": "10%-30%",
+          "startingState": "has_project"
+        },
+        "keySteps": [
+          "核对本专业前三年推免名额递补线（含专项计划、支教团与国奖加分细则），确认校内保研资格安全垫",
+          "5–6月夏令营重在熟悉机试环境与面试高频问题，重点锁定对双非/边缘排名友好的211及科研院所预推免批次",
+          "准备中英文自我介绍与1份可现场演示或讲清实验对照细节的核心课设/大创项目PPT"
+        ],
+        "interviewQuestions": [
+          "请用3分钟讲清楚你在大创或课设项目里独立解决的最核心技术难点，实验基线是怎么设定的？"
+        ],
+        "pitfalls": [
+          "不要盲目海投几十封千篇一律的群发套磁信，阅读目标导师近两年1–2篇代表作写出具体契合点回复率高得多"
+        ],
+        "actionTask": {
+          "title": "建立冲稳保三档目标院校夏令营/预推免时间表并提炼代表作5分钟答辩大纲",
+          "estimatedHours": 3,
+          "deliverable": "院校批次跟踪表与代表项目一页式技术摘要",
+          "targetModule": "conflict"
+        },
+        "citation": {
+          "sourceUrl": "https://github.com/CS-BAOYAN/CS-BAOYAN-2026",
+          "publishedAt": "2026-10-28",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "开源社区协作复盘（近30天4篇同方向独立经验交叉印证），具体推免细则以本校及目标院校当年通知为准"
+        },
+        "corroborationCluster": "baoyan:pre_camp_strategy"
+      },
+      {
+        "id": "exp_gh_9aa96078",
+        "schemaVersion": "1.0",
+        "platform": "github_exp",
+        "platformLabel": "GitHub 开源经验仓",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "camp_policy",
+        "title": "GitHub - shenyanpai/awesome-summer-camp-2026: 2026年度保研夏令营通知合集（完整版） · GitHub",
+        "tldr": "- awesome-summer-camp-2026",
+        "targetGradYear": null,
+        "guidanceScore": 0.61,
+        "corroborationCount": 2,
+        "paths": [
+          "baoyan"
+        ],
+        "directionIds": [],
+        "familyIds": [],
+        "mappedSkillIds": [
+          "git_collab"
+        ],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "unknown",
+          "majorFamily": "econ",
+          "rankBucket": "unknown",
+          "startingState": "unknown"
+        },
+        "keySteps": [
+          "核对目标院校近两年夏令营与预推免入营排名区间，按冲刺/稳妥/保底三档建立时间表",
+          "将现有最高含金量的1项课设、大创或科研训练整理为5分钟答辩PPT与一页式个人陈述摘要"
+        ],
+        "interviewQuestions": [],
+        "pitfalls": [],
+        "actionTask": {
+          "title": "结合Git协作与版本管理实战要点，在经历工坊升级1项可核验项目/课设证据",
+          "estimatedHours": 4,
+          "deliverable": "包含角色、动作与可验证量化指标的经历条目",
+          "targetModule": "evidence"
+        },
+        "citation": {
+          "sourceUrl": "https://github.com/shenyanpai/awesome-summer-camp-2026",
+          "publishedAt": "2026-11-27",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "baoyan:git_collab"
+      },
+      {
+        "id": "exp_gh_d98f67ba",
+        "schemaVersion": "1.0",
+        "platform": "github_exp",
+        "platformLabel": "GitHub 开源经验仓",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "camp_policy",
+        "title": "GitHub - shenyanpai/awesome-summer-camp-2025: 2025年度保研夏令营通知合集（完整版） · GitHub",
+        "tldr": "- awesome-summer-camp-2025",
+        "targetGradYear": null,
+        "guidanceScore": 0.61,
+        "corroborationCount": 2,
+        "paths": [
+          "baoyan"
+        ],
+        "directionIds": [],
+        "familyIds": [],
+        "mappedSkillIds": [
+          "git_collab"
+        ],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "unknown",
+          "majorFamily": "econ",
+          "rankBucket": "unknown",
+          "startingState": "unknown"
+        },
+        "keySteps": [
+          "核对目标院校近两年夏令营与预推免入营排名区间，按冲刺/稳妥/保底三档建立时间表",
+          "将现有最高含金量的1项课设、大创或科研训练整理为5分钟答辩PPT与一页式个人陈述摘要"
+        ],
+        "interviewQuestions": [],
+        "pitfalls": [],
+        "actionTask": {
+          "title": "结合Git协作与版本管理实战要点，在经历工坊升级1项可核验项目/课设证据",
+          "estimatedHours": 4,
+          "deliverable": "包含角色、动作与可验证量化指标的经历条目",
+          "targetModule": "evidence"
+        },
+        "citation": {
+          "sourceUrl": "https://github.com/shenyanpai/awesome-summer-camp-2025",
+          "publishedAt": "2026-11-27",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "full_markdown",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "baoyan:git_collab"
+      },
+      {
+        "id": "exp_zh_kaoyan_timeline",
+        "schemaVersion": "1.0",
+        "platform": "zhihu",
+        "platformLabel": "知乎",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "offer_retro",
+        "title": "一战上岸复盘：如何用报录比与真题重合度科学择校，避开秋招与备考双线崩盘",
+        "tldr": "择校先查目标学院官网近三年一志愿复试名单最低分与录取人数波动，9月前完成专业课首轮框架，留出10月整块真题模考窗口。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.86,
+        "corroborationCount": 1,
+        "paths": [
+          "kaoyan"
+        ],
+        "directionIds": [],
+        "familyIds": [],
+        "mappedSkillIds": [
+          "data_structures",
+          "os",
+          "computer_networks"
+        ],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "non_double_first_class",
+          "majorFamily": "unknown",
+          "rankBucket": ">30%",
+          "startingState": "zero_internship"
+        },
+        "keySteps": [
+          "直接去目标高校研究生院官网下载近三年『一志愿进复试名单』与『拟录取名单』核算真实复录比与中位分",
+          "若同时保留秋招保底意向，在9月中旬前用现成课设投完一批保底国企/银行网申，10月起全力锁死初试冲刺",
+          "每周固定留出3小时按真实考试时段做整套限时模考，统计高频失分章节而非盲目比拼刷题遍数"
+        ],
+        "interviewQuestions": [],
+        "pitfalls": [
+          "警惕只看某一年偶发低分爆冷就盲目冲刺大小年剧烈波动的热门自命题院校"
+        ],
+        "actionTask": {
+          "title": "核查2所备选目标院校官网近三年一志愿拟录取中位分与参考书变动记录",
+          "estimatedHours": 2.5,
+          "deliverable": "目标院校三年分数线、招生人数与考试科目对比表",
+          "targetModule": "conflict"
+        },
+        "citation": {
+          "sourceUrl": "https://zhuanlan.zhihu.com/p/712839401",
+          "publishedAt": "2026-11-05",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "search_snippet",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "kaoyan:school_selection"
+      },
+      {
+        "id": "exp_xhs_liuxue_diy",
+        "schemaVersion": "1.0",
+        "platform": "xiaohongshu",
+        "platformLabel": "小红书",
+        "trustTier": "B_EXPERIENCE",
+        "livenessStatus": "active",
+        "category": "offer_retro",
+        "title": "均分82–86全程DIY港新英混申复盘：语言出分死线、课程匹配度与文书避坑",
+        "tldr": "港新授课型硕士高度看重Round1早申先发优势与核心先修课匹配度，DIY完全可照官网Checklist独立完成，无需高价全包中介。",
+        "targetGradYear": 2027,
+        "guidanceScore": 0.85,
+        "corroborationCount": 1,
+        "paths": [
+          "liuxue"
+        ],
+        "directionIds": [],
+        "familyIds": [],
+        "mappedSkillIds": [
+          "research_writing",
+          "statistics"
+        ],
+        "targetOrgs": [],
+        "authorBaseline": {
+          "schoolTier": "211",
+          "majorFamily": "econ",
+          "rankBucket": "10%-30%",
+          "startingState": "has_internship"
+        },
+        "keySteps": [
+          "按申请当年9–10月Round1开放倒推，最迟在暑假前考出达标雅思/托福总分与小分线",
+          "逐一核对目标项目官网Curriculum要求的核心先修课，在个人陈述中明确映射本校已修高分课程与量化作业",
+          "提前联系2位授课或指导过课设/论文的本校老师确认网推邮箱与推荐信提交节奏"
+        ],
+        "interviewQuestions": [],
+        "pitfalls": [
+          "切忌轻信中介所谓『内部合作保录通道』高价合同，港新英所有正规录取均只走学校官方网申系统审核"
+        ],
+        "actionTask": {
+          "title": "核对3个目标留学项目官网的Round1截止日、语言小分要求与先修课清单",
+          "estimatedHours": 2,
+          "deliverable": "DIY申请项目硬性要求与材料清单核对表",
+          "targetModule": "conflict"
+        },
+        "citation": {
+          "sourceUrl": "https://www.xiaohongshu.com/explore/6728b4c2000000001a03f219",
+          "publishedAt": "2026-11-08",
+          "verifiedAt": "2026-11-27",
+          "extractMode": "search_snippet",
+          "disclaimer": "社区个体实战样本，仅供参考，非官方硬门槛"
+        },
+        "corroborationCluster": "liuxue:diy_round1"
+      }
+    ]
+  }
 }

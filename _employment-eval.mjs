@@ -367,6 +367,26 @@ if (process.argv.includes('--self-test')) {
   assert.equal(rescored[1].eligibility.status,'FAIL');
   assert.equal(rescored[1].tier,'challenge');
   assert.equal(rescored[1].freshness,failed.freshness);
+
+  // Experience Intel Ranking NDCG@5 self-test across diverse student personas
+  if (Array.isArray(engine.DATA.experienceIntel?.items) && engine.DATA.experienceIntel.items.length >= 8) {
+    const expItems = engine.DATA.experienceIntel.items;
+    const evalPersonas = [
+      { personaId: 'p_chinese', path: 'jiuye', relevantPred: it => it.directionIds.includes('content') || it.directionIds.includes('product') },
+      { personaId: 'p_cs', path: 'jiuye', relevantPred: it => it.directionIds.includes('software') || it.directionIds.includes('data') },
+      { personaId: 'p_mat', path: 'jiuye', relevantPred: it => it.directionIds.includes('embedded') || it.directionIds.includes('automation') },
+      { personaId: 'p_cs', path: 'baoyan', relevantPred: it => it.paths.includes('baoyan') },
+    ];
+    const ndcgScores = evalPersonas.map(({ personaId, path, relevantPred }) => {
+      const per = engine.DATA.personas.find(x => x.id === personaId);
+      const ranked = engine.rankExperienceIntel(per, [path], expItems, {}, new Date('2026-11-27T00:00:00Z'));
+      const grades = ranked.map(it => relevantPred(it) ? 3 : (it.paths.includes(path) ? 1 : 0));
+      const ideal = [...grades].sort((x, y) => y - x);
+      return ndcg(grades, ideal, 5);
+    });
+    const meanIntelNdcg5 = mean(ndcgScores);
+    assert.ok(meanIntelNdcg5 >= 0.85, `Expected experience intel NDCG@5 >= 0.85, got ${meanIntelNdcg5}`);
+  }
   console.log('Employment metric checks passed');
 } else {
   const args = process.argv.slice(2);

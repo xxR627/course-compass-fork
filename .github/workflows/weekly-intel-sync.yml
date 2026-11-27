@@ -1,0 +1,65 @@
+name: Weekly Experience Intel Sync
+
+on:
+  schedule:
+    # Runs every Sunday at 14:00 UTC (22:00 Beijing Time) ahead of Monday 08:00 student weekly digest
+    - cron: '0 14 * * 0'
+  workflow_dispatch:
+    inputs:
+      budget:
+        description: 'Maximum candidate pages to crawl across channels'
+        required: false
+        default: '24'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-experience-intel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Run incremental multi-channel experience crawl and distillation
+        env:
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          MODELSCOPE_API_KEY: ${{ secrets.MODELSCOPE_API_KEY }}
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+        run: |
+          node _crawl-experiences.mjs --gh-actions --budget "${{ github.event.inputs.budget || '24' }}" --llm
+
+      - name: Refresh inline experience snapshot and verify all SDD quality gates
+        run: |
+          node _enrich-catalog.mjs --experiences-only
+          node _build-inline.mjs
+          pnpm check:experience
+          node _smoke.mjs
+          node _employment-contract-test.mjs
+          node _employment-eval.mjs --self-test
+          node _build-inline.mjs --check
+
+      - name: Install Chromium and run full headless E2E gate
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec node _employment-e2e.mjs
+
+      - name: Commit updated weekly snapshot if changed
+        run: |
+          if git diff --quiet -- _cc-data.json index.html; then
+            echo "No snapshot diff to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _cc-data.json index.html
+          git commit -m "chore(intel): weekly experience intelligence snapshot sync"
+          git push

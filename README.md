@@ -46,6 +46,31 @@
   - **A4 定制定向简历工坊 & 导出**：支持按目标岗位实时重排 STAR 要点、缺失指标标出 `[待补充实测数据]`，提供 Markdown 下载与浏览器 A4 打印排版（`@media print`）。
   - **五阶段投递看板与面试复盘**：提供五阶段状态流转看板，并支持录入高频追问生成专项加练动作与能力映射。
 
+## 实战情报与每周经验采集系统（SDD M0–M4 完整闭环）
+
+围绕「反焦虑 · 零软广 · 同起点对标 · 阅后即行动」原则，系统按 SDD 规范完整落地多源经验采集、反软广蒸馏、`intel-rank-2.0` 个性化精排与四环自我更新（规格文档见 [`docs/sdd/`](docs/sdd/01-PRD-experience-intel.md)）：
+
+- **免 Rust / 免 Docker 开箱即用的本地 Firecrawl v2 兼容底座（[`_firecrawl-local-serve.mjs`](_firecrawl-local-serve.mjs) & [`_firecrawl-client.mjs`](_firecrawl-client.mjs)）**：
+  - 内置完整 SSRF 私网与 DNS 重绑定守卫（兼容 Windows TUN Fake-IP 域名解析，严拦回环/内网/云元数据 IP）、严格遵守目标站点 `robots.txt`、`onlyMainContent` 净版 Markdown 提取、`maxAge` 缓存复用及按需 Playwright/Edge 动态渲染；
+  - 搜索发现（`/v2/search`）自动协同 Firecrawl Cloud / Keyless 索引或自托管 `SEARXNG_ENDPOINT`，同时无缝兼容本机 Rust `firecrawl-local serve`（`127.0.0.1:3002`）与 Docker 自托管服务。
+- **五源合规采集与四重反软广蒸馏（[`_crawl-experiences.mjs`](_crawl-experiences.mjs)）**：
+  - 覆盖 **牛客网、知乎、小红书、GitHub 开源经验仓、B站专栏与高校官方就业网**；遇 `robots.txt` 限制或 `401/403/429` 零对抗优雅降级为公开索引摘要或进入渠道冷却；
+  - 经 **64-bit SimHash 跨平台洗稿合并 → 确定性反软广/引流黑名单 → 多源免费云网关（带零显存纯规则兜底）结构化提炼 → 双层 PII 脱敏与多源交叉印证聚类** 后写入 `_research/experiences.db`。
+- **同构六维精排 `intel-rank-2.0` + MMR 多样性重排 +「一核三嵌」行动闭环**：
+  - 在 [`_cc-engine.js`](_cc-engine.js) 前后端同构计算「路径契合 25% + 同侪起点相似度 22% + 个人技能缺口互补 20% + 指导纯度 15% + 半衰期时效 10% + 学制窗口共振 8%」，输出可解释 `why[]` 标签；
+  - 触达 **海图首页 4 槽位防焦虑周报**、**核心导航「实战情报」库**、**路径与诊断同起点破局卡** 与 **岗位详情同方向面经栏**，支持一键 `⚡ 采纳进本周行动`（联动冲突海图重算工时）、`🎯 收入面试复盘题库`、`🛠️ 去经历工坊参考`。
+- **四环自我更新**：动态 `QueryPlanner`（联动岗位仓新兴热门技能）+ **UCB1 多臂老虎机**渠道预算自愈 + 存量死链/跨届归档巡检 + 本地 `AES-GCM` 零知识反馈学习，并由 [`.github/workflows/weekly-intel-sync.yml`](.github/workflows/weekly-intel-sync.yml) 每周日自动巡航同步静态站快照。
+
+```powershell
+# 1. 运行离线契约 + 真实在线搜索与抓取端到端冒烟（自动拉起本机 Firecrawl v2 服务）
+node --env-file=.env.local _experience-contract-test.mjs --live
+
+# 2. 手动执行一轮多渠道增量经验采集并更新内联快照
+node --env-file=.env.local _crawl-experiences.mjs --budget 18 --llm
+node _enrich-catalog.mjs --experiences-only
+node _build-inline.mjs
+```
+
 ## 更新与构建快照
 
 `index.html` 是浏览器主入口，`_cc-data.json` 与 `_cc-engine.js`（`MATCH_VERSION = 'match-2.0.0'` / `TAXONOMY_VERSION = '2026.11.3'`）是内嵌构建来源。更新仓内抽样数据或修改引擎/UI 后，按顺序执行：

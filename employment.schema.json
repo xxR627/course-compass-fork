@@ -96,6 +96,16 @@
               "notes": { "type": ["string", "null"] }
             }
           }
+        },
+        "experienceIntel": {
+          "type": "object",
+          "required": ["schemaVersion", "updatedAt", "items"],
+          "properties": {
+            "schemaVersion": { "const": "1.0" },
+            "updatedAt": { "$ref": "#/$defs/DayOrInstant" },
+            "totalWarehouseCount": { "type": "integer", "minimum": 0 },
+            "items": { "type": "array", "maxItems": 300, "items": { "type": "object" } }
+          }
         }
       }
     },

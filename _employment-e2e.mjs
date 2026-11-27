@@ -1009,6 +1009,45 @@ try {
     assert.ok(await vaultPage.locator('.cc-profile-bar').getByText('已继承课设/实验 1 项', { exact: false }).first().isVisible());
     assert.ok(await vaultPage.getByRole('heading', { name: '方向与岗位族', exact: true }).isVisible());
     assert.ok(await vaultPage.getByRole('heading', { name: '软件开发', exact: true }).first().isVisible());
+
+    // Verify Experience Intel M0-M4 full UX loop: Home 4-slot digest -> Diagnosis peer cards -> Adopt to Conflict workload -> Import interview questions -> Zero-knowledge feedback
+    await vaultPage.locator('.nav-item[data-module="dash"]').click();
+    const digestCards = vaultPage.locator('#weekly-exp-digest .exp-digest-card');
+    const digestCount = await digestCards.count();
+    assert.ok(digestCount >= 3 && digestCount <= 4, `Expected 3-4 anti-anxiety weekly digest cards, got ${digestCount}`);
+
+    await vaultPage.locator('[data-action="path-toggle"][data-path="jiuye"]').count();
+    await vaultPage.locator('.nav-item[data-module="paths"]').click();
+    await vaultPage.locator('[data-action="path-toggle"][data-path="jiuye"]').click();
+    await vaultPage.locator('[data-action="go-diag"]').click();
+    assert.ok(await vaultPage.locator('#diag-peer-experiences .exp-digest-card').first().isVisible(), 'Diagnosis view must embed peer-baseline experience cards');
+
+    // Adopt experience action task and verify Conflict Chart load immediately increases
+    await vaultPage.locator('#diag-peer-experiences [data-action="intel-adopt-task"]').first().click();
+    assert.ok(await vaultPage.locator('#global-action-plan').getByText('实战经验采纳', { exact: false }).first().isVisible());
+    await vaultPage.locator('.nav-item[data-module="conflict"]').click();
+    assert.ok(await vaultPage.getByText('已采纳实战经验行动', { exact: false }).first().isVisible());
+    assert.ok(await vaultPage.getByText('实战经验行动', { exact: false }).first().isVisible());
+
+    // Navigate to promoted core sidebar item "实战情报", import interview questions, and verify negative feedback reranking
+    const navTexts = await vaultPage.locator('#nav .nav-item').allTextContents();
+    const jobsNavIdx = navTexts.findIndex(t => t.includes('就业·岗位库'));
+    const intelNavIdx = navTexts.findIndex(t => t.includes('实战情报'));
+    const conflictNavIdx = navTexts.findIndex(t => t.includes('冲突海图'));
+    assert.ok(intelNavIdx > jobsNavIdx && intelNavIdx < conflictNavIdx, '实战情报 must sit in the core exploration group between 就业·岗位库 and 冲突海图');
+
+    await vaultPage.locator('.nav-item[data-module="intel"]').click();
+    await vaultPage.locator('[data-action="intel-cat"][data-cat="interview_exp"]').click();
+    assert.ok(await vaultPage.locator('.intel-card').first().isVisible());
+    await vaultPage.locator('.intel-card [data-action="intel-import-questions"]').first().click();
+    await vaultPage.locator('.intel-card [data-action="intel-not-peer"]').first().click();
+    const hasNegWeight = await vaultPage.evaluate(() => Object.values(state.intelPrefs?.tagWeights || {}).some(v => v < 0));
+    assert.equal(hasNegWeight, true, 'Local zero-knowledge tagWeights must record negative peer preference');
+
+    // Verify imported interview questions appear on Employment Kanban postmortem board
+    await vaultPage.locator('.nav-item[data-module="jobs"]').click();
+    await vaultPage.locator('.cc-employment-nav [data-mode="saved"]').click();
+    assert.ok(await vaultPage.getByText('实战面经', { exact: false }).first().isVisible());
   } finally {
     await vaultContext.close();
   }

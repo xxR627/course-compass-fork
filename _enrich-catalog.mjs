@@ -6,12 +6,17 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assertEmploymentCatalog } from './_employment-contract.mjs';
 import { employmentEngine, jobLinkIdentity, normalizePosting, validateEmploymentData } from './_employment-data.mjs';
+import { EXPERIENCE_CHANNELS } from './_experience-channels.mjs';
+import { openExperienceDb } from './_experience-db.mjs';
+import { defaultQuerySeeds } from './_experience-query-planner.mjs';
+import { buildBaselineExperienceRecords } from './_experience-seed-baseline.mjs';
 
 const require = createRequire(import.meta.url);
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = join(ROOT, '_cc-data.json');
 const JOBS_DB = join(ROOT, '_research', 'jobs.db');
 const CALENDAR_DB = join(ROOT, '_research', 'calendar.db');
+const EXPERIENCES_DB = join(ROOT, '_research', 'experiences.db');
 const SECTOR_FILE = join(ROOT, '_research', 'company-sector.json');
 const JD_TEXT_DB = process.env.CC_JD_TEXT_DB ||
   'C:/Users/Administrator/.gemini/antigravity/brain/e7a3f14c-423f-445c-9da3-9e88637eb57f/scratch/jd_text.db';
@@ -534,36 +539,78 @@ function sampleWarehousePostings(data, engine, sectorMap) {
 }
 
 function main() {
+  const experiencesOnly = process.argv.includes('--experiences-only');
   const data = JSON.parse(readFileSync(DATA_FILE, 'utf8'));
   const sectorMap = existsSync(SECTOR_FILE) ? JSON.parse(readFileSync(SECTOR_FILE, 'utf8')) : {};
 
-  // 1. Sync new v2.0 skills and aliases
-  const existingSkillIds = new Set(data.skills.map(s => s.id));
-  for (const s of EXTRA_SKILL_DEFS) {
-    if (!existingSkillIds.has(s.id)) {
-      data.skills.push({ id: s.id, name: s.name, category: s.category });
-      existingSkillIds.add(s.id);
+  if (!experiencesOnly) {
+    // 1. Sync new v2.0 skills and aliases
+    const existingSkillIds = new Set(data.skills.map(s => s.id));
+    for (const s of EXTRA_SKILL_DEFS) {
+      if (!existingSkillIds.has(s.id)) {
+        data.skills.push({ id: s.id, name: s.name, category: s.category });
+        existingSkillIds.add(s.id);
+      }
+      for (const a of s.aliases) {
+        if (!data.aliases[a]) data.aliases[a] = { skillId: s.id };
+      }
     }
-    for (const a of s.aliases) {
-      if (!data.aliases[a]) data.aliases[a] = { skillId: s.id };
+    for (const [k, v] of Object.entries(EXTRA_ALIAS_PATCH)) {
+      if (!data.aliases[k]) data.aliases[k] = v;
     }
-  }
-  for (const [k, v] of Object.entries(EXTRA_ALIAS_PATCH)) {
-    if (!data.aliases[k]) data.aliases[k] = v;
   }
 
   // Re-initialize engine with updated skill taxonomy
   const engine = employmentEngine(data);
 
-  // 2. Backfill existing 398 + add ~300 diverse open warehouse jobs
-  const newJobs = sampleWarehousePostings(data, engine, sectorMap);
-  data.jobs.push(...newJobs);
+  if (!experiencesOnly) {
+    // 2. Backfill existing 398 + add ~300 diverse open warehouse jobs
+    const newJobs = sampleWarehousePostings(data, engine, sectorMap);
+    data.jobs.push(...newJobs);
 
-  // 3. Populate verified campusCalendar (180 entries)
-  data.campusCalendar = buildCampusCalendar(CALENDAR_DB);
+    // 3. Populate verified campusCalendar (180 entries)
+    data.campusCalendar = buildCampusCalendar(CALENDAR_DB);
 
-  // 4. Upgrade personas (coursework fallback on p_mat vs real projects/competitions/internships on p_chinese, p_cs, p_econ)
-  upgradePersonas(data);
+    // 4. Upgrade personas (coursework fallback on p_mat vs real projects/competitions/internships on p_chinese, p_cs, p_econ)
+    upgradePersonas(data);
+  }
+
+  // 4.5. Sync & sample balanced Top-300 ExperienceIntel snapshot from _research/experiences.db
+  const expDb = openExperienceDb(EXPERIENCES_DB);
+  let totalWarehouseExp = 0;
+  try {
+    expDb.ensureSources(EXPERIENCE_CHANNELS);
+    if (!expDb.listQuerySeeds().length) expDb.upsertQuerySeeds(defaultQuerySeeds());
+    expDb.upsertExperiences(buildBaselineExperienceRecords(new Date().toISOString().slice(0, 10)));
+    expDb.recomputeCorroboration({ windowDays: 30, now: new Date() });
+    const allActive = expDb.listExperiences({ limit: 500, activeOnly: true }).map(r => r.item);
+    totalWarehouseExp = allActive.length;
+    const picked = [];
+    const seenExp = new Set();
+    for (const pathKey of ['jiuye', 'baoyan', 'kaoyan', 'liuxue']) {
+      for (const it of allActive) {
+        if (seenExp.has(it.id) || !it.paths.includes(pathKey)) continue;
+        picked.push(it);
+        seenExp.add(it.id);
+        if (picked.filter(x => x.paths.includes(pathKey)).length >= 60) break;
+      }
+    }
+    for (const it of allActive) {
+      if (picked.length >= 260) break;
+      if (!seenExp.has(it.id)) {
+        picked.push(it);
+        seenExp.add(it.id);
+      }
+    }
+    data.experienceIntel = {
+      schemaVersion: '1.0',
+      updatedAt: new Date().toISOString().slice(0, 10),
+      totalWarehouseCount: totalWarehouseExp,
+      items: picked.slice(0, 260),
+    };
+  } finally {
+    expDb.close();
+  }
 
   // 5. Strict validation before atomic write (throws if invalid)
   validateEmploymentData(data);
@@ -583,6 +630,7 @@ function main() {
     withMinDegree: withDeg,
     withIndustry: withInd,
     campusCalendar: data.campusCalendar.length,
+    experienceIntel: data.experienceIntel?.items?.length || 0,
   }, null, 2));
 }
 

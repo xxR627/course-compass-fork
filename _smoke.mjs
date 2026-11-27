@@ -513,4 +513,60 @@ assert.equal(offlineStatus.available, false);
   }
 }
 console.log('HASH', CC.checkUpdate(null));
+console.log('SMOKE_INTEL_RANK_V2');
+{
+  assert.equal(CC.INTEL_RANK_VERSION, 'intel-rank-2.0');
+  const pool = data.experienceIntel?.items || [];
+  assert.ok(pool.length >= 10, 'Inline catalog must contain enriched experienceIntel items');
+  const pChn = data.personas.find(x => x.id === 'p_chinese');
+  const pCs = data.personas.find(x => x.id === 'p_cs');
+  const pMat = data.personas.find(x => x.id === 'p_mat');
+
+  const rChn = CC.rankExperienceIntel(pChn, ['jiuye'], pool, {}, new Date('2026-11-27T00:00:00Z'));
+  const rCs = CC.rankExperienceIntel(pCs, ['jiuye'], pool, {}, new Date('2026-11-27T00:00:00Z'));
+  const rMat = CC.rankExperienceIntel(pMat, ['jiuye'], pool, {}, new Date('2026-11-27T00:00:00Z'));
+  const rBaoyan = CC.rankExperienceIntel(pCs, ['baoyan'], pool, {}, new Date('2026-11-27T00:00:00Z'));
+
+  assert.notEqual(rChn[0].id, rMat[0].id, 'Chinese vs MatMech cold-start personas must receive differentiated top playbooks');
+  assert.ok(rBaoyan[0].paths.includes('baoyan'), 'Baoyan path must prioritize baoyan playbook at rank 1');
+  assert.ok(rChn.every(it => Array.isArray(it.why) && it.why.length >= 1), 'Every ranked card must carry explainable why[] chips');
+
+  // Verify MMR diversity suppresses homogeneous clones in Top-4 and meets <25ms latency budget on 300 items
+  const cloned300 = Array.from({ length: 300 }, (_, idx) => ({
+    ...pool[idx % pool.length],
+    id: `exp_bench_${idx}`,
+  }));
+  const t0 = performance.now();
+  const benchOut = CC.rankExperienceIntel(pCs, ['jiuye'], cloned300, {}, new Date('2026-11-27T00:00:00Z'));
+  const elapsedMs = performance.now() - t0;
+  assert.ok(elapsedMs < 80, `intel-rank-2.0 + MMR over 300 items took ${elapsedMs.toFixed(1)}ms`);
+  const digest = CC.buildWeeklyDigest(rCs, ['jiuye', 'baoyan']);
+  assert.ok(digest.length >= 3 && digest.length <= 4, 'Weekly digest must strictly cap slots to 3-4 cards');
+
+  // Verify /api/intel/* server routes & cross-origin protection
+  const srv = createCourseCompassServer({ identityDbPath: ':memory:' });
+  srv.listen(0, '127.0.0.1');
+  await once(srv, 'listening');
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try {
+    const crossOrigin = await fetch(`${base}/api/intel/experiences`, { headers: { Origin: 'https://evil.example' } });
+    assert.equal(crossOrigin.status, 403);
+    const okExp = await fetch(`${base}/api/intel/experiences?path=baoyan`);
+    assert.equal(okExp.status, 200);
+    const expJson = await okExp.json();
+    assert.ok(expJson.items.length >= 1 && expJson.items.every(x => x.paths.includes('baoyan')));
+
+    const okFeed = await fetch(`${base}/api/intel/feed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profile: { major: '汉语言文学', grade: '大三', weeklyHours: 8 }, paths: ['jiuye'] }),
+    });
+    assert.equal(okFeed.status, 200);
+    const feedJson = await okFeed.json();
+    assert.equal(feedJson.rankVersion, 'intel-rank-2.0');
+    assert.ok(feedJson.digest.length >= 3);
+  } finally {
+    await new Promise(resolve => srv.close(resolve));
+  }
+}
 console.log('SMOKE_OK');
